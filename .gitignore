@@ -1,0 +1,33 @@
+# ===============================
+# Global ignore cho toàn bộ repo
+# ===============================
+
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Build output
+dist/
+**/dist/
+
+# Env & secrets
+.env
+**/.env
+.env.*
+**/.env.*
+
+# Logs
+logs/
+**/logs/
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Misc
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.idea/
+.vscode/
