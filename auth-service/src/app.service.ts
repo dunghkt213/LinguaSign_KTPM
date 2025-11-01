@@ -34,7 +34,7 @@ export class AppService {
   // ------------------------------
   // Sinh Refresh Token
   // ------------------------------
-  generateRefreshToken(userId: number) {
+  generateRefreshToken(userId: string) {
     const secret = process.env.REFRESH_SECRET;
     if (!secret) {
       throw new Error('❌ REFRESH_SECRET not found in .env');
