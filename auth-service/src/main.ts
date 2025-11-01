@@ -10,6 +10,7 @@ async function bootstrap() {
       consumer: { groupId: 'auth-consumer-group' },
     },
   });
+
   await app.listen();
   console.log('✅ Auth Service connected to Kafka');
 }

@@ -1,7 +1,7 @@
 import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { AppService } from './app.service';
-import { AccessTokenPayload } from './types/jwt-payload.interface'; // 👈 import interface
+import { AccessTokenPayload } from './types/jwt-payload.interface';
 
 @Controller()
 export class AppController {
@@ -11,14 +11,14 @@ export class AppController {
   // 🔑 AUTH.LOGIN
   // ============================================================
   @MessagePattern('auth.login')
-  handleLogin(@Payload() message: any) {
+  async handleLogin(@Payload() message: any) {
     const { username, password } = message.value;
     const user = this.appService.validateUser(username, password);
     if (!user) return { error: 'Invalid credentials' };
 
     // ⚙️ generate tokens
     const accessToken = this.appService.generateAccessToken(user.id, username);
-    const refreshToken = this.appService.generateRefreshToken(user.id);
+    const refreshToken = await this.appService.generateRefreshToken(user.id);
 
     return {
       accessToken,
@@ -31,16 +31,18 @@ export class AppController {
   // 🔄 AUTH.REFRESH
   // ============================================================
   @MessagePattern('auth.refresh')
-  handleRefresh(@Payload() message: any) {
+  async handleRefresh(@Payload() message: any) {
     const { refresh_token } = message.value;
-    const payload = this.appService.verifyRefreshToken(refresh_token) as AccessTokenPayload | null;
+    const payload = (await this.appService.verifyRefreshToken(
+      refresh_token,
+    )) as AccessTokenPayload | null;
 
     if (!payload) return { error: 'Invalid or expired refresh token' };
 
-    // ⚙️ Tạo access token mới (payload.sub là string, convert sang number nếu cần)
+    // ⚙️ Tạo access token mới
     const accessToken = this.appService.generateAccessToken(
-      payload.sub,
-      payload.username,
+      String(payload.sub),
+      payload.username || 'unknown',
     );
 
     return { accessToken, refreshToken: refresh_token };
