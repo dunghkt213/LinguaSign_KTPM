@@ -5,29 +5,64 @@ import { firstValueFrom } from 'rxjs';
 @Injectable()
 export class AppService implements OnModuleInit {
   constructor(
-    @Inject('AUTH_SERVICE') private readonly kafkaClient: ClientKafka,
+    @Inject('AUTH_SERVICE') private readonly authClient: ClientKafka,
+    @Inject('USER_SERVICE') private readonly userClient: ClientKafka,
   ) {}
 
   async onModuleInit() {
-    // Đăng ký topic cần lắng nghe phản hồi
-    this.kafkaClient.subscribeToResponseOf('auth.login');
-    this.kafkaClient.subscribeToResponseOf('auth.refresh');
-    this.kafkaClient.subscribeToResponseOf('auth.verify');
+    // ==== AUTH topics ====
+    this.authClient.subscribeToResponseOf('auth.login');
+    this.authClient.subscribeToResponseOf('auth.refresh');
+    this.authClient.subscribeToResponseOf('auth.verify');
+    await this.authClient.connect();
 
-    // ⚡ Bắt buộc connect()
-    await this.kafkaClient.connect();
+    // ==== USER topics ====
+    this.userClient.subscribeToResponseOf('user.create');
+    this.userClient.subscribeToResponseOf('user.get');
+    this.userClient.subscribeToResponseOf('user.update');
+    this.userClient.subscribeToResponseOf('user.delete');
+    this.userClient.subscribeToResponseOf('user.getAll');
+    await this.userClient.connect();
   }
 
-  async login(payload: any) {
-    console.log('🚀 Sending Kafka message to auth.login:', payload);
-    return await firstValueFrom(this.kafkaClient.send('auth.login', payload));
+  // ============================================================
+  // AUTH
+  // ============================================================
+  async login(body: any) {
+    console.log('🚀 [Gateway] Sending → auth.login:', body);
+    return await firstValueFrom(this.authClient.send('auth.login', body));
   }
 
-  async refresh(payload: any) {
-    return await firstValueFrom(this.kafkaClient.send('auth.refresh', payload));
+  async refresh(body: any) {
+    console.log('♻️ [Gateway] Sending → auth.refresh:', body);
+    return await firstValueFrom(this.authClient.send('auth.refresh', body));
   }
 
-  async verify(payload: any) {
-    return await firstValueFrom(this.kafkaClient.send('auth.verify', payload));
+  async verify(body: any) {
+    console.log('🧾 [Gateway] Sending → auth.verify:', body);
+    return await firstValueFrom(this.authClient.send('auth.verify', body));
+  }
+
+  // ============================================================
+  // USER
+  // ============================================================
+  async createUser(body: any) {
+    return await firstValueFrom(this.userClient.send('user.create', body));
+  }
+
+  async getUser(body: any) {
+    return await firstValueFrom(this.userClient.send('user.get', body));
+  }
+
+  async updateUser(body: any) {
+    return await firstValueFrom(this.userClient.send('user.update', body));
+  }
+
+  async deleteUser(body: any) {
+    return await firstValueFrom(this.userClient.send('user.delete', body));
+  }
+
+  async getAllUsers() {
+    return await firstValueFrom(this.userClient.send('user.getAll', {}));
   }
 }

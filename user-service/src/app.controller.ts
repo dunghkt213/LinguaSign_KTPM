@@ -8,32 +8,32 @@ import { UpdateUserDto } from './dto/update-user.dto';
 export class AppController {
   constructor(private readonly appService: AppService) {}
 
-  @MessagePattern('create_user')
+  @MessagePattern('user.create')
   async createUser(@Payload() message: any) {
-    const createUserDto: CreateUserDto = message.value;
+    const createUserDto: CreateUserDto = message;
     return await this.appService.createUser(createUserDto);
   }
 
-  @MessagePattern('get_user')
+  @MessagePattern('user.get')
   async getUser(@Payload() message: any) {
-    const { id } = message.value;
+    const { id } = message;
     return await this.appService.getUserById(id);
   }
 
-  @MessagePattern('update_user')
+  @MessagePattern('user.update')
   async updateUser(@Payload() message: any) {
-    const { id, dto } = message.value;
+    const { id, dto } = message;
     const updateUserDto: UpdateUserDto = dto;
     return await this.appService.updateUser(id, updateUserDto);
   }
 
-  @MessagePattern('delete_user')
+  @MessagePattern('user.delete')
   async deleteUser(@Payload() message: any) {
-    const { id } = message.value;
+    const { id } = message;
     return await this.appService.deleteUser(id);
   }
 
-  @MessagePattern('get_all_users')
+  @MessagePattern('user.getAll')
   async getAllUsers() {
     return await this.appService.getAll();
   }

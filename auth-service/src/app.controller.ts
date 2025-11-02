@@ -33,7 +33,7 @@ export class AppController {
   // ============================================================
   @MessagePattern('auth.refresh')
   async handleRefresh(@Payload() message: any) {
-    const { refresh_token } = message.value;
+    const { refresh_token } = message;
     const payload = (await this.appService.verifyRefreshToken(
       refresh_token,
     )) as AccessTokenPayload | null;
@@ -54,7 +54,7 @@ export class AppController {
   // ============================================================
   @MessagePattern('auth.verify')
   handleVerify(@Payload() message: any) {
-    const { token } = message.value;
+    const { token } = message;
     const payload = this.appService.verifyAccessToken(token) as AccessTokenPayload | null;
 
     if (!payload) return { error: 'Invalid or expired access token' };

@@ -50,47 +50,14 @@ services:
       context: ./user-service
       dockerfile: Dockerfile
     container_name: user-service
-    restart: unless-stopped
+    volumes:
+      - ./user-service:/app
+    command: npm run start:dev
     depends_on:
       - kafka
       - mongo
     env_file:
-      - ./user-service/.env
-
-  course-service:
-    build:
-      context: ./course-service
-      dockerfile: Dockerfile
-    container_name: course-service
-    restart: unless-stopped
-    depends_on:
-      - kafka
-      - mongo
-    env_file:
-      - ./course-service/.env
-
-  learning-progress-service:
-    build:
-      context: ./learning-progress-service
-      dockerfile: Dockerfile
-    container_name: learning-progress-service
-    restart: unless-stopped
-    depends_on:
-      - kafka
-      - mongo
-    env_file:
-      - ./learning-progress-service/.env
-
-  noti-service:
-    build:
-      context: ./noti-service
-      dockerfile: Dockerfile
-    container_name: noti-service
-    restart: unless-stopped
-    depends_on:
-      - kafka
-    env_file:
-      - ./noti-service/.env
+      - ./user-service/.env  
 
   api-gateway:
     build:

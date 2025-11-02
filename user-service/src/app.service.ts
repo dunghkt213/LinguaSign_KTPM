@@ -1,5 +1,4 @@
-import { Injectable, OnModuleInit, Inject } from '@nestjs/common';
-import { ClientKafka } from '@nestjs/microservices';
+import { Injectable, OnModuleInit } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { User } from './schemas/user.schema';
@@ -8,17 +7,14 @@ import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class AppService {
-  constructor(@InjectModel(User.name) private userModel: Model<User>,
-              @Inject('NOTI_SERVICE') private readonly client: ClientKafka,) {}
-
-  async onModuleInit() {
-    await this.client.connect();
-  }
+  constructor(@InjectModel(User.name) private userModel: Model<User>) {}
 
   async createUser(createUserDto: CreateUserDto): Promise<User> {
     const createdUser = new this.userModel(createUserDto);
     const savedUser = await createdUser.save();
-    this.client.emit('user_events', { userId: savedUser._id, name: savedUser.name });
+
+    // 🔇 Tạm bỏ gửi Kafka event (chưa có noti-service)
+    // this.client.emit('user.events', { userId: savedUser._id, name: savedUser.name });
 
     return savedUser;
   }

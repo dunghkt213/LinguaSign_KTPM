@@ -9,11 +9,11 @@ async function bootstrap() {
       transport: Transport.KAFKA,
       options: {
         client: {
-          clientId: 'auth-service',
-          brokers: ['kafka:9092'], // <-- chú ý: dùng "kafka" (service name trong docker-compose), không phải localhost
+          clientId: 'user-service',
+          brokers: ['kafka:9092'], 
         },
         consumer: {
-          groupId: 'auth-consumer-group',
+          groupId: 'user-consumer-group',
         },
       },
     },
