@@ -1,68 +1,74 @@
-import { Injectable, Inject, OnModuleInit } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ClientKafka } from '@nestjs/microservices';
-import { firstValueFrom } from 'rxjs';
+import { Inject } from '@nestjs/common';
 
 @Injectable()
-export class AppService implements OnModuleInit {
+export class AppService {
   constructor(
     @Inject('AUTH_SERVICE') private readonly authClient: ClientKafka,
     @Inject('USER_SERVICE') private readonly userClient: ClientKafka,
   ) {}
 
   async onModuleInit() {
-    // ==== AUTH topics ====
+    // đăng ký tất cả các topic để có thể nhận response
+    this.authClient.subscribeToResponseOf('auth.register');
     this.authClient.subscribeToResponseOf('auth.login');
     this.authClient.subscribeToResponseOf('auth.refresh');
     this.authClient.subscribeToResponseOf('auth.verify');
-    await this.authClient.connect();
+    this.authClient.subscribeToResponseOf('auth.revoke');
 
-    // ==== USER topics ====
     this.userClient.subscribeToResponseOf('user.create');
+    this.userClient.subscribeToResponseOf('user.getAll');
     this.userClient.subscribeToResponseOf('user.get');
     this.userClient.subscribeToResponseOf('user.update');
     this.userClient.subscribeToResponseOf('user.delete');
-    this.userClient.subscribeToResponseOf('user.getAll');
-    await this.userClient.connect();
   }
 
   // ============================================================
   // AUTH
   // ============================================================
-  async login(body: any) {
-    console.log('🚀 [Gateway] Sending → auth.login:', body);
-    return await firstValueFrom(this.authClient.send('auth.login', body));
+
+  async register(data: any) {
+    return await this.authClient.send('auth.register', data).toPromise();
   }
 
-  async refresh(body: any) {
-    console.log('♻️ [Gateway] Sending → auth.refresh:', body);
-    return await firstValueFrom(this.authClient.send('auth.refresh', body));
+  async login(data: any) {
+    return await this.authClient.send('auth.login', data).toPromise();
   }
 
-  async verify(body: any) {
-    console.log('🧾 [Gateway] Sending → auth.verify:', body);
-    return await firstValueFrom(this.authClient.send('auth.verify', body));
+  async refresh(data: any) {
+    return await this.authClient.send('auth.refresh', data).toPromise();
+  }
+
+  async verify(data: any) {
+    return await this.authClient.send('auth.verify', data).toPromise();
+  }
+
+  async revoke(data: any) {
+    return await this.authClient.send('auth.revoke', data).toPromise();
   }
 
   // ============================================================
-  // USER
+  // USERS
   // ============================================================
-  async createUser(body: any) {
-    return await firstValueFrom(this.userClient.send('user.create', body));
-  }
 
-  async getUser(body: any) {
-    return await firstValueFrom(this.userClient.send('user.get', body));
-  }
-
-  async updateUser(body: any) {
-    return await firstValueFrom(this.userClient.send('user.update', body));
-  }
-
-  async deleteUser(body: any) {
-    return await firstValueFrom(this.userClient.send('user.delete', body));
+  async createUser(data: any) {
+    return await this.userClient.send('user.create', data).toPromise();
   }
 
   async getAllUsers() {
-    return await firstValueFrom(this.userClient.send('user.getAll', {}));
+    return await this.userClient.send('user.getAll', {}).toPromise();
+  }
+
+  async getUser(data: any) {
+    return await this.userClient.send('user.get', data).toPromise();
+  }
+
+  async updateUser(data: any) {
+    return await this.userClient.send('user.update', data).toPromise();
+  }
+
+  async deleteUser(data: any) {
+    return await this.userClient.send('user.delete', data).toPromise();
   }
 }

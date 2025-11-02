@@ -6,7 +6,7 @@ export class Token extends Document {
   @Prop({ required: true })
   userId: string;
 
-  @Prop({ required: true })
+  @Prop({ required: true, unique: true, index: true })
   refreshToken: string;
 
   @Prop({ default: false })

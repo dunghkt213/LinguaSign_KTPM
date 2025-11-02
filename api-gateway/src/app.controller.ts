@@ -1,59 +1,136 @@
-import { Controller, Post, Body, Get, Param, Put, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Get,
+  Param,
+  Put,
+  Delete,
+  Res,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { AppService } from './app.service';
+import type { Response, Request } from 'express';
+import { JwtAuthGuard } from './jwt-auth.guard';
 
 @Controller()
 export class AppController {
   constructor(private readonly appService: AppService) {}
 
-  // ============================================================
-  // 🔑 AUTH ENDPOINTS
-  // ============================================================
+  // -------- AUTH --------
+
+  @Post('auth/register')
+  async register(
+    @Body() body: any,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const result = await this.appService.register(body);
+
+    if (!result?.success) return result;
+
+    
+    const refreshInfo = result.data.refreshTokenInfo;
+    res.cookie(refreshInfo.name, refreshInfo.value, refreshInfo.options);
+
+    return {
+      success: true,
+      message: result.message,
+      user: result.data.user,
+      accessToken: result.data.accessToken,
+    };
+  }
+
   @Post('auth/login')
-  async login(@Body() body: any) {
-    return await this.appService.login(body);
+  async login(
+    @Body() body: any,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const result = await this.appService.login(body);
+
+    if (!result?.success) return result;
+
+    const refreshInfo = result.data.refreshTokenInfo;
+    res.cookie(refreshInfo.name, refreshInfo.value, refreshInfo.options);
+
+    return {
+      success: true,
+      message: result.message,
+      user: result.data.user,
+      accessToken: result.data.accessToken,
+    };
   }
 
+  // Access token hết hạn => client gọi endpoint này
+  // refreshToken được đọc từ cookie HttpOnly
   @Post('auth/refresh')
-  async refresh(@Body() body: any) {
-    return await this.appService.refresh(body);
+  async refresh(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const refreshToken = req.cookies?.['refreshToken'];
+
+    const result = await this.appService.refresh({ refreshToken });
+
+    if (!result?.success) return result;
+
+    // Gửi lại cookie refreshToken. (ở đây vẫn là token cũ,
+    // nhưng ta set lại maxAge trên browser để nó sống tiếp tới hết hạn thực sự)
+    const refreshInfo = result.data.refreshTokenInfo;
+    res.cookie(refreshInfo.name, refreshInfo.value, refreshInfo.options);
+
+    return {
+      success: true,
+      message: result.message,
+      accessToken: result.data.accessToken,
+    };
   }
 
-  @Post('auth/verify')
-  async verify(@Body() body: any) {
-    return await this.appService.verify(body);
+  @Post('auth/revoke')
+  async revoke(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const refreshToken = req.cookies?.['refreshToken'];
+
+    const result = await this.appService.revoke({ refreshToken });
+
+    // Xoá cookie phía client khi logout
+    res.clearCookie('refreshToken', { path: '/auth/refresh' });
+
+    return result;
   }
 
-  // ============================================================
-  // 👤 USER ENDPOINTS
-  // ============================================================
-
-  @Post('users')
-  async createUser(@Body() body: any) {
-    console.log('📤 [Gateway] → user.create:', body);
-    return await this.appService.createUser(body);
-  }
-
+  // -------- PROTECTED RESOURCES --------
+  // Mọi request cần access token đều sẽ đi qua guard này
+  // login, register, refresh thì không dùng guard
+  @UseGuards(JwtAuthGuard)
   @Get('users')
   async getAllUsers() {
-    console.log('📤 [Gateway] → user.getAll');
     return await this.appService.getAllUsers();
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get('users/:id')
   async getUser(@Param('id') id: string) {
-    console.log('📤 [Gateway] → user.get:', id);
     return await this.appService.getUser({ id });
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Post('users')
+  async createUser(@Body() body: any) {
+    return await this.appService.createUser(body);
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Put('users/:id')
   async updateUser(@Param('id') id: string, @Body() body: any) {
-    console.log('📤 [Gateway] → user.update:', { id, dto: body });
     return await this.appService.updateUser({ id, dto: body });
   }
 
+  @UseGuards(JwtAuthGuard)
   @Delete('users/:id')
   async deleteUser(@Param('id') id: string) {
-    console.log('📤 [Gateway] → user.delete:', id);
     return await this.appService.deleteUser({ id });
   }
 }

@@ -1,70 +1,101 @@
-import { Controller } from '@nestjs/common';
+import { Controller, UnauthorizedException, Inject } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { AppService } from './app.service';
-import { AccessTokenPayload } from './types/jwt-payload.interface';
+import { ClientKafka } from '@nestjs/microservices';
 
 @Controller()
 export class AppController {
-  constructor(private readonly appService: AppService) {}
+  constructor(
+    private readonly appService: AppService,
 
-  // ============================================================
-  // 🔑 AUTH.LOGIN
-  // ============================================================
+    @Inject('USER_SERVICE')
+    private readonly userClient: ClientKafka,
+  ) {}
+
+  @MessagePattern('auth.register')
+  async handleRegister(
+    @Payload()
+    data: { username: string; password: string; email: string; name: string },
+  ) {
+    try {
+      const result = await this.appService.registerUser(data);
+
+      return {
+        success: true,
+        message: 'User registered successfully',
+        data: {
+          user: result.user,
+          accessToken: result.accessToken,
+          refreshTokenInfo: result.refreshTokenInfo,
+        },
+      };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  }
+
   @MessagePattern('auth.login')
-  async handleLogin(@Payload() message: any) {
-    console.log('📩 Received message from Kafka:', message);
-    const { username, password } = message;
-    const user = this.appService.validateUser(username, password);
-    if (!user) return { error: 'Invalid credentials' };
+  async handleLogin(
+    @Payload() message: { username: string; password: string },
+  ) {
+    try {
+      const { username, password } = message;
+      const result = await this.appService.login(username, password);
 
-    // ⚙️ generate tokens
-    const accessToken = this.appService.generateAccessToken(user.id, username);
-    const refreshToken = await this.appService.generateRefreshToken(user.id);
-
-    return {
-      accessToken,
-      refreshToken,
-      user: { id: user.id, username: user.username, name: user.name },
-    };
+      return {
+        success: true,
+        message: 'Login successful',
+        data: {
+          user: result.user,
+          accessToken: result.accessToken,
+          refreshTokenInfo: result.refreshTokenInfo,
+        },
+      };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
   }
 
-  // ============================================================
-  // 🔄 AUTH.REFRESH
-  // ============================================================
   @MessagePattern('auth.refresh')
-  async handleRefresh(@Payload() message: any) {
-    const { refresh_token } = message;
-    const payload = (await this.appService.verifyRefreshToken(
-      refresh_token,
-    )) as AccessTokenPayload | null;
+  async handleRefresh(@Payload() message: { refreshToken: string }) {
+    try {
+      const result = await this.appService.refreshAccessToken(
+        message.refreshToken,
+      );
 
-    if (!payload) return { error: 'Invalid or expired refresh token' };
-
-    // ⚙️ Tạo access token mới
-    const accessToken = this.appService.generateAccessToken(
-      String(payload.sub),
-      payload.username || 'unknown',
-    );
-
-    return { accessToken, refreshToken: refresh_token };
+      return {
+        success: true,
+        message: 'Access token refreshed',
+        data: {
+          accessToken: result.accessToken,
+          refreshTokenInfo: result.refreshTokenInfo,
+        },
+      };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
   }
 
-  // ============================================================
-  // 🧾 AUTH.VERIFY
-  // ============================================================
   @MessagePattern('auth.verify')
-  handleVerify(@Payload() message: any) {
-    const { token } = message;
-    const payload = this.appService.verifyAccessToken(token) as AccessTokenPayload | null;
-
-    if (!payload) return { error: 'Invalid or expired access token' };
-
-    // ⚙️ Trả về thông tin user trong token
+  async handleVerify(@Payload() message: { token: string }) {
+    const payload = this.appService.verifyAccessToken(message.token);
+    if (!payload) {
+      return { success: false, error: 'Invalid or expired access token' };
+    }
     return {
-      user: {
-        id: payload.sub,
-        username: payload.username || 'unknown',
+      success: true,
+      data: {
+        user: {
+          id: payload['sub'],
+          username: payload['username'] || 'unknown',
+        },
       },
     };
+  }
+
+  @MessagePattern('auth.revoke')
+  async handleRevoke(@Payload() message: { refreshToken: string }) {
+    await this.appService.revoke(message.refreshToken);
+    return { success: true, message: 'Refresh token revoked' };
   }
 }
