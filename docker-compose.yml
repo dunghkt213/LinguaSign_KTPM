@@ -1,0 +1,116 @@
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.6.0
+    container_name: zookeeper
+    restart: always
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+
+  kafka:
+    image: confluentinc/cp-kafka:7.6.0
+    container_name: kafka
+    restart: always
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    ports:
+      - "9092:9092"
+
+  mongo:
+    image: mongo:6
+    container_name: mongo
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+
+  auth-service:
+    build:
+      context: ./auth-service
+      dockerfile: Dockerfile
+    container_name: auth-service
+    restart: unless-stopped
+    depends_on:
+      - kafka
+      - mongo
+    env_file:
+      - ./auth-service/.env
+
+  user-service:
+    build:
+      context: ./user-service
+      dockerfile: Dockerfile
+    container_name: user-service
+    restart: unless-stopped
+    depends_on:
+      - kafka
+      - mongo
+    env_file:
+      - ./user-service/.env
+
+  course-service:
+    build:
+      context: ./course-service
+      dockerfile: Dockerfile
+    container_name: course-service
+    restart: unless-stopped
+    depends_on:
+      - kafka
+      - mongo
+    env_file:
+      - ./course-service/.env
+
+  learning-progress-service:
+    build:
+      context: ./learning-progress-service
+      dockerfile: Dockerfile
+    container_name: learning-progress-service
+    restart: unless-stopped
+    depends_on:
+      - kafka
+      - mongo
+    env_file:
+      - ./learning-progress-service/.env
+
+  noti-service:
+    build:
+      context: ./noti-service
+      dockerfile: Dockerfile
+    container_name: noti-service
+    restart: unless-stopped
+    depends_on:
+      - kafka
+    env_file:
+      - ./noti-service/.env
+
+  api-gateway:
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    container_name: api-gateway
+    restart: unless-stopped
+    depends_on:
+      - kafka
+      - auth-service
+      - user-service
+    env_file:
+      - ./api-gateway/.env
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./auth-service:/app   
+      - ./api-gateway:/app     # ✅ Mount code để hot reload
+      - /app/node_modules      # ✅ Tránh đè node_modules
+    command: npm run start:dev
+
+volumes:
+  mongo-data:
