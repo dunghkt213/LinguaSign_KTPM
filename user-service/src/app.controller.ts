@@ -9,33 +9,33 @@ export class AppController {
   constructor(private readonly appService: AppService) {}
 
   @MessagePattern('create_user')
-  createUser(@Payload() message: any) {
+  async createUser(@Payload() message: any) {
     const createUserDto: CreateUserDto = message.value;
-    return this.appService.createUser(createUserDto);
+    return await this.appService.createUser(createUserDto);
   }
 
   @MessagePattern('get_user')
-  getUser(@Payload() message: any) {
+  async getUser(@Payload() message: any) {
     const { id } = message.value;
-    return this.appService.getUserById(id);
+    return await this.appService.getUserById(id);
   }
 
   @MessagePattern('update_user')
-  updateUser(@Payload() message: any) {
+  async updateUser(@Payload() message: any) {
     const { id, dto } = message.value;
     const updateUserDto: UpdateUserDto = dto;
-    return this.appService.updateUser(id, updateUserDto);
+    return await this.appService.updateUser(id, updateUserDto);
   }
 
   @MessagePattern('delete_user')
-  deleteUser(@Payload() message: any) {
+  async deleteUser(@Payload() message: any) {
     const { id } = message.value;
-    return this.appService.deleteUser(id);
+    return await this.appService.deleteUser(id);
   }
 
   @MessagePattern('get_all_users')
-  getAllUsers() {
-    return this.appService.getAll();
+  async getAllUsers() {
+    return await this.appService.getAll();
   }
 } 
  
