@@ -5,6 +5,7 @@ import { Connection } from 'mongoose';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TokenModule } from './token/token.module';
+import { ClientsModule, Transport } from '@nestjs/microservices';
 
 @Module({
   imports: [
@@ -20,6 +21,21 @@ import { TokenModule } from './token/token.module';
     }),
 
     TokenModule,
+    ClientsModule.register([
+      {
+        name: 'USER_SERVICE',
+        transport: Transport.KAFKA,
+        options: {
+          client: {
+            clientId: 'auth-service-client',
+            brokers: ['kafka:9092'], 
+          },
+          consumer: {
+            groupId: 'auth-user-consumer-group',
+          },
+        },
+      },
+    ]),
   ],
   controllers: [AppController],
   providers: [AppService],

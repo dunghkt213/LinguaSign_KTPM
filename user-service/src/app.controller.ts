@@ -9,17 +9,23 @@ export class AppController {
   constructor(private readonly appService: AppService) {}
 
   @MessagePattern('user.create')
-  async createUser(@Payload() message: any) {
-    const createUserDto: CreateUserDto = message;
-    return await this.appService.createUser(createUserDto);
-  }
+  async handleCreate(@Payload() data: CreateUserDto) {
+  console.log('📨 Received user.create message with data:', data);
+  return await this.appService.createUser(data);
+
+}
 
   @MessagePattern('user.get')
   async getUser(@Payload() message: any) {
     const { id } = message;
     return await this.appService.getUserById(id);
   }
-
+  @MessagePattern('user.getByUsername')
+  async getbyUsername(@Payload() message: any) {
+    const { username } = message;
+    console.log('🔍 Validating user via user-service:', username);
+    return await this.appService.getUserByUsername(username);
+  }
   @MessagePattern('user.update')
   async updateUser(@Payload() message: any) {
     const { id, dto } = message;

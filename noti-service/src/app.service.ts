@@ -24,7 +24,7 @@ export class AppService {
     console.log('Notification saved:', saved);
     return saved;
   }
-
+  
   async getAllNotifications(userId: string) {
     return this.notiModel.find({ userId }).exec();
   }

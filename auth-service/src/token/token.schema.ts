@@ -6,14 +6,14 @@ export class Token extends Document {
   @Prop({ required: true })
   userId: string;
 
+  @Prop({ required: true, unique: true })
+  token: string;
+
   @Prop({ required: true })
-  refreshToken: string;
+  expiresAt: Date; // thời điểm hết hạn (ví dụ +30 ngày)
 
   @Prop({ default: false })
-  revoked: boolean;
-
-  @Prop()
-  expiresAt: Date;
+  revoked: boolean; // true = đã thu hồi, không được dùng nữa
 }
 
 export const TokenSchema = SchemaFactory.createForClass(Token);
