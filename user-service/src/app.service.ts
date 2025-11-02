@@ -1,42 +1,42 @@
-import { Injectable } from '@nestjs/common';
-import { User } from './user.entity';
+import { Injectable, OnModuleInit, Inject } from '@nestjs/common';
+import { ClientKafka } from '@nestjs/microservices';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import { User } from './schemas/user.schema';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { randomUUID } from 'crypto';
 
 @Injectable()
 export class AppService {
-  private users: User[] = [];
+  constructor(@InjectModel(User.name) private userModel: Model<User>,
+              @Inject('NOTI_SERVICE') private readonly client: ClientKafka,) {}
 
-  createUser(createUserDto: CreateUserDto): User {
-    const newUser: User = {
-      id: randomUUID(),
-      ...createUserDto
-    };
-
-    this.users.push(newUser);
-    return newUser;
+  async onModuleInit() {
+    await this.client.connect();
   }
 
-  getUserById(id: string): User | undefined {
-    return this.users.find(user => user.id === id);
+  async createUser(createUserDto: CreateUserDto): Promise<User> {
+    const createdUser = new this.userModel(createUserDto);
+    const savedUser = await createdUser.save();
+    this.client.emit('user_events', { userId: savedUser._id, name: savedUser.name });
+
+    return savedUser;
   }
 
-  updateUser(id: string, dto: UpdateUserDto): User | undefined {
-    const user = this.getUserById(id);
-    if (!user) return undefined;
-    Object.assign(user, dto);
-    return user;
+  async getUserById(id: string): Promise<User | null> {
+    return this.userModel.findById(id).exec();
   }
 
-  deleteUser(id: string): boolean {
-    const index = this.users.findIndex(user => user.id === id);
-    if (index === -1) return false;
-    this.users.splice(index, 1);
-    return true;
+  async updateUser(id: string, dto: UpdateUserDto): Promise<User | null> {
+    return this.userModel.findByIdAndUpdate(id, dto, { new: true }).exec();
   }
 
-  getAll(): User[] {
-    return this.users;
+  async deleteUser(id: string): Promise<boolean> {
+    const result = await this.userModel.findByIdAndDelete(id).exec();
+    return result !== null;
+  }
+
+  async getAll(): Promise<User[]> {
+    return this.userModel.find().exec();
   }
 }
