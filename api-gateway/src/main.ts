@@ -3,17 +3,27 @@ import { AppModule } from './app.module';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 
 async function bootstrap() {
-  const app = await NestFactory.createMicroservice<MicroserviceOptions>(
-    AppModule,
-    {
-      transport: Transport.KAFKA,
-      options: {
-        client: { clientId: 'auth-service', brokers: ['localhost:9092'] },
-        consumer: { groupId: 'auth-consumer-group' },
+  // 🚀 Tạo HTTP server để nhận request từ Postman
+  const app = await NestFactory.create(AppModule);
+
+  // 🔗 Kết nối thêm microservice Kafka (vừa HTTP, vừa Kafka)
+  app.connectMicroservice<MicroserviceOptions>({
+    transport: Transport.KAFKA,
+    options: {
+      client: {
+        clientId: 'api-gateway',
+        brokers: ['kafka:9092'], // 👈 phải trùng với docker-compose
+      },
+      consumer: {
+        groupId: 'api-gateway-consumer',
       },
     },
-  );
-  await app.listen();
-  console.log('✅ Auth Service is running and connected to Kafka');
+  });
+
+  // 🚀 Start cả 2 song song
+  await app.startAllMicroservices();
+  await app.listen(3000);
+
+  console.log('✅ API Gateway is running on http://localhost:3000');
 }
 bootstrap();

@@ -12,7 +12,8 @@ export class AppController {
   // ============================================================
   @MessagePattern('auth.login')
   async handleLogin(@Payload() message: any) {
-    const { username, password } = message.value;
+    console.log('📩 Received message from Kafka:', message);
+    const { username, password } = message;
     const user = this.appService.validateUser(username, password);
     if (!user) return { error: 'Invalid credentials' };
 
