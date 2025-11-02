@@ -12,7 +12,7 @@ async function bootstrap() {
     options: {
       client: {
         clientId: 'api-gateway',
-        brokers: ['kafka:9092'], // 👈 phải trùng với docker-compose
+        brokers: ['kafka:9092'], 
       },
       consumer: {
         groupId: 'api-gateway-consumer',

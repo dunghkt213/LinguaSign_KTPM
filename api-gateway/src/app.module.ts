@@ -7,15 +7,28 @@ import { AppService } from './app.service';
   imports: [
     ClientsModule.register([
       {
-        name: 'AUTH_SERVICE', // 👈 phải trùng với token được inject
+        name: 'AUTH_SERVICE',
         transport: Transport.KAFKA,
         options: {
           client: {
-            clientId: 'api-gateway-auth', // Tên client Kafka
-            brokers: ['kafka:9092'], // 👈 dùng 'kafka' thay vì localhost
+            clientId: 'auth-client',
+            brokers: ['kafka:9092'],
           },
           consumer: {
-            groupId: 'api-gateway-auth-consumer',
+            groupId: 'api-gateway-auth-consumer-client',
+          },
+        },
+      },
+      {
+        name: 'USER_SERVICE',
+        transport: Transport.KAFKA,
+        options: {
+          client: {
+            clientId: 'user-client',
+            brokers: ['kafka:9092'],
+          },
+          consumer: {
+            groupId: 'api-gateway-user-consumer-client',
           },
         },
       },
