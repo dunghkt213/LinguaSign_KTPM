@@ -5,31 +5,23 @@ import { AppService } from './app.service';
 
 @Module({
   imports: [
-    ClientsModule.register([
+     ClientsModule.register([
       {
-        name: 'AUTH_SERVICE',
+        name: 'KAFKA_SERVICE',
         transport: Transport.KAFKA,
         options: {
           client: {
-            clientId: 'auth-client',
-            brokers: ['kafka:9092'],
+            clientId: 'api-gateway',
+            brokers: [process.env.KAFKA_BROKER || 'kafka:9092'],
           },
           consumer: {
-            groupId: 'api-gateway-auth-consumer-client',
+            groupId: 'api-gateway-consumer',
           },
-        },
-      },
-      {
-        name: 'USER_SERVICE',
-        transport: Transport.KAFKA,
-        options: {
-          client: {
-            clientId: 'user-client',
-            brokers: ['kafka:9092'],
+
+          subscribe: {
+            fromBeginning: false
           },
-          consumer: {
-            groupId: 'api-gateway-user-consumer-client',
-          },
+          producerOnlyMode: false,
         },
       },
     ]),

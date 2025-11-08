@@ -16,22 +16,7 @@ async function bootstrap() {
     credentials: true,                 // cho phép gửi cookie kèm request
   });
 
-  // 🔗 Kết nối microservice Kafka (Gateway ↔ Auth/User)
-  app.connectMicroservice<MicroserviceOptions>({
-    transport: Transport.KAFKA,
-    options: {
-      client: {
-        clientId: 'api-gateway',
-        brokers: ['kafka:9092'], // hoặc 'localhost:9092' nếu chạy ngoài Docker
-      },
-      consumer: {
-        groupId: 'api-gateway-consumer',
-      },
-    },
-  });
 
-  // 🚀 Start cả HTTP và Kafka song song
-  await app.startAllMicroservices();
   await app.listen(3000);
 
   console.log('✅ API Gateway is running on http://localhost:3000');
