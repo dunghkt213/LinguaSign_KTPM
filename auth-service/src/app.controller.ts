@@ -5,12 +5,7 @@ import { ClientKafka } from '@nestjs/microservices';
 
 @Controller()
 export class AppController {
-  constructor(
-    private readonly appService: AppService,
-
-    @Inject('USER_SERVICE')
-    private readonly userClient: ClientKafka,
-  ) {}
+  constructor(private readonly appService: AppService) {}
 
   @MessagePattern('auth.register')
   async handleRegister(
