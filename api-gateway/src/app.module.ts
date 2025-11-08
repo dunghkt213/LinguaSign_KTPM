@@ -10,26 +10,24 @@ import { AppService } from './app.service';
         name: 'AUTH_SERVICE',
         transport: Transport.KAFKA,
         options: {
-          client: {
-            clientId: 'auth-client',
-            brokers: ['kafka:9092'],
-          },
-          consumer: {
-            groupId: 'api-gateway-auth-consumer-client',
-          },
+          client: { clientId: 'auth-client', brokers: ['kafka:9092'] },
+          consumer: { groupId: 'api-gateway-auth-consumer-client' },
         },
       },
       {
         name: 'USER_SERVICE',
         transport: Transport.KAFKA,
         options: {
-          client: {
-            clientId: 'user-client',
-            brokers: ['kafka:9092'],
-          },
-          consumer: {
-            groupId: 'api-gateway-user-consumer-client',
-          },
+          client: { clientId: 'user-client', brokers: ['kafka:9092'] },
+          consumer: { groupId: 'api-gateway-user-consumer-client' },
+        },
+      },
+      {
+        name: 'COURSE_SERVICE',
+        transport: Transport.KAFKA,
+        options: {
+          client: { clientId: 'course-client', brokers: ['kafka:9092'] },
+          consumer: { groupId: 'api-gateway-course-consumer-client' },
         },
       },
     ]),

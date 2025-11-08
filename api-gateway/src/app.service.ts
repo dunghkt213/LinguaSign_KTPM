@@ -7,6 +7,7 @@ export class AppService {
   constructor(
     @Inject('AUTH_SERVICE') private readonly authClient: ClientKafka,
     @Inject('USER_SERVICE') private readonly userClient: ClientKafka,
+    @Inject('COURSE_SERVICE') private readonly courseClient: ClientKafka,
   ) {}
 
   async onModuleInit() {
@@ -22,6 +23,12 @@ export class AppService {
     this.userClient.subscribeToResponseOf('user.get');
     this.userClient.subscribeToResponseOf('user.update');
     this.userClient.subscribeToResponseOf('user.delete');
+
+    this.courseClient.subscribeToResponseOf('course.create');
+    this.courseClient.subscribeToResponseOf('course.getAll');
+    this.courseClient.subscribeToResponseOf('course.get');
+    this.courseClient.subscribeToResponseOf('course.update');
+    this.courseClient.subscribeToResponseOf('course.delete');
   }
 
   // ============================================================
@@ -70,5 +77,26 @@ export class AppService {
 
   async deleteUser(data: any) {
     return await this.userClient.send('user.delete', data).toPromise();
+  }
+
+  // course methods
+  async createCourse(data: any) {
+    return await this.courseClient.send('course.create', data).toPromise();
+  }
+
+  async getAllCourses() {
+    return await this.courseClient.send('course.getAll', {}).toPromise();
+  }
+
+  async getCourse(data: any) {
+    return await this.courseClient.send('course.get', data).toPromise();
+  }
+
+  async updateCourse(data: any) {
+    return await this.courseClient.send('course.update', data).toPromise();
+  }
+
+  async deleteCourse(data: any) {
+    return await this.courseClient.send('course.delete', data).toPromise();
   }
 }
