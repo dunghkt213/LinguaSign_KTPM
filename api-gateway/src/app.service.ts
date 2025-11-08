@@ -5,7 +5,7 @@ import { Inject } from '@nestjs/common';
 @Injectable()
 export class AppService implements OnModuleInit, OnApplicationBootstrap {
   constructor(
-    @Inject('KAFKA_SERVICE') private readonly kafkaClient: ClientKafka,
+    @Inject('GATEWAY_SERVICE') private readonly kafkaClient: ClientKafka,
   ) {}
 
   // ============================================================
@@ -38,8 +38,11 @@ export class AppService implements OnModuleInit, OnApplicationBootstrap {
   // ============================================================
 
   async register(data: any) {
-    return this.kafkaClient.send('auth.register', data).toPromise();
-  }
+  console.log('🧭 Kafka connected?', this.kafkaClient['producer'] ? '✅ yes' : '❌ no');
+  console.log('🧩 Patterns now:', this.kafkaClient['responsePatterns']);
+  console.log('🧩 Sending data:', data);
+  return this.kafkaClient.send('auth.register', data).toPromise();
+}
 
   async login(data: any) {
     return this.kafkaClient.send('auth.login', data).toPromise();

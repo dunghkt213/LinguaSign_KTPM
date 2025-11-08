@@ -7,12 +7,12 @@ import { AppService } from './app.service';
   imports: [
      ClientsModule.register([
       {
-        name: 'KAFKA_SERVICE',
+        name: 'GATEWAY_SERVICE',
         transport: Transport.KAFKA,
         options: {
           client: {
             clientId: 'api-gateway',
-            brokers: [process.env.KAFKA_BROKER || 'kafka:9092'],
+            brokers: ['kafka:9092'],
           },
           consumer: {
             groupId: 'api-gateway-consumer',
