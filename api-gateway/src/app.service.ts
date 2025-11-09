@@ -1,34 +1,36 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, OnModuleInit, OnApplicationBootstrap } from '@nestjs/common';
 import { ClientKafka } from '@nestjs/microservices';
 import { Inject } from '@nestjs/common';
 
 @Injectable()
-export class AppService {
+export class AppService implements OnModuleInit, OnApplicationBootstrap {
   constructor(
-    @Inject('AUTH_SERVICE') private readonly authClient: ClientKafka,
-    @Inject('USER_SERVICE') private readonly userClient: ClientKafka,
-    @Inject('COURSE_SERVICE') private readonly courseClient: ClientKafka,
+    @Inject('GATEWAY_SERVICE') private readonly kafkaClient: ClientKafka,
   ) {}
 
+  // ============================================================
+  // 1️⃣ Đăng ký tất cả topic cần phản hồi (trước khi app bootstrap)
+  // ============================================================
   async onModuleInit() {
-    // đăng ký tất cả các topic để có thể nhận response
-    this.authClient.subscribeToResponseOf('auth.register');
-    this.authClient.subscribeToResponseOf('auth.login');
-    this.authClient.subscribeToResponseOf('auth.refresh');
-    this.authClient.subscribeToResponseOf('auth.verify');
-    this.authClient.subscribeToResponseOf('auth.revoke');
+    const topics = [
+      // Auth topics
+      'auth.register', 'auth.login', 'auth.refresh',
+      'auth.verify', 'auth.revoke',
 
-    this.userClient.subscribeToResponseOf('user.create');
-    this.userClient.subscribeToResponseOf('user.getAll');
-    this.userClient.subscribeToResponseOf('user.get');
-    this.userClient.subscribeToResponseOf('user.update');
-    this.userClient.subscribeToResponseOf('user.delete');
+      // User topics
+      'user.create', 'user.getAll', 'user.get',
+      'user.update', 'user.delete',
+    ];
 
-    this.courseClient.subscribeToResponseOf('course.create');
-    this.courseClient.subscribeToResponseOf('course.getAll');
-    this.courseClient.subscribeToResponseOf('course.get');
-    this.courseClient.subscribeToResponseOf('course.update');
-    this.courseClient.subscribeToResponseOf('course.delete');
+    topics.forEach(topic => this.kafkaClient.subscribeToResponseOf(topic));
+  }
+
+  // ============================================================
+  // 2️⃣ Chỉ connect Kafka client SAU KHI toàn bộ app đã khởi động
+  // ============================================================
+  async onApplicationBootstrap() {
+    await this.kafkaClient.connect();
+    console.log('✅ Kafka client connected & response topics registered');
   }
 
   // ============================================================
@@ -36,23 +38,26 @@ export class AppService {
   // ============================================================
 
   async register(data: any) {
-    return await this.authClient.send('auth.register', data).toPromise();
-  }
+  console.log('🧭 Kafka connected?', this.kafkaClient['producer'] ? '✅ yes' : '❌ no');
+  console.log('🧩 Patterns now:', this.kafkaClient['responsePatterns']);
+  console.log('🧩 Sending data:', data);
+  return this.kafkaClient.send('auth.register', data).toPromise();
+}
 
   async login(data: any) {
-    return await this.authClient.send('auth.login', data).toPromise();
+    return this.kafkaClient.send('auth.login', data).toPromise();
   }
 
   async refresh(data: any) {
-    return await this.authClient.send('auth.refresh', data).toPromise();
+    return this.kafkaClient.send('auth.refresh', data).toPromise();
   }
 
   async verify(data: any) {
-    return await this.authClient.send('auth.verify', data).toPromise();
+    return this.kafkaClient.send('auth.verify', data).toPromise();
   }
 
   async revoke(data: any) {
-    return await this.authClient.send('auth.revoke', data).toPromise();
+    return this.kafkaClient.send('auth.revoke', data).toPromise();
   }
 
   // ============================================================
@@ -60,43 +65,43 @@ export class AppService {
   // ============================================================
 
   async createUser(data: any) {
-    return await this.userClient.send('user.create', data).toPromise();
+    return this.kafkaClient.send('user.create', data).toPromise();
   }
 
   async getAllUsers() {
-    return await this.userClient.send('user.getAll', {}).toPromise();
+    return this.kafkaClient.send('user.getAll', {}).toPromise();
   }
 
   async getUser(data: any) {
-    return await this.userClient.send('user.get', data).toPromise();
+    return this.kafkaClient.send('user.get', data).toPromise();
   }
 
   async updateUser(data: any) {
-    return await this.userClient.send('user.update', data).toPromise();
+    return this.kafkaClient.send('user.update', data).toPromise();
   }
 
   async deleteUser(data: any) {
-    return await this.userClient.send('user.delete', data).toPromise();
+    return this.kafkaClient.send('user.delete', data).toPromise();
   }
 
   // course methods
   async createCourse(data: any) {
-    return await this.courseClient.send('course.create', data).toPromise();
+    return this.kafkaClient.send('course.create', data).toPromise();
   }
 
   async getAllCourses() {
-    return await this.courseClient.send('course.getAll', {}).toPromise();
+   return this.kafkaClient.send('course.getAll', {}).toPromise();
   }
 
   async getCourse(data: any) {
-    return await this.courseClient.send('course.get', data).toPromise();
+    return await this.kafkaClient.send('course.get', data).toPromise();
   }
 
   async updateCourse(data: any) {
-    return await this.courseClient.send('course.update', data).toPromise();
+    return await this.kafkaClient.send('course.update', data).toPromise();
   }
 
   async deleteCourse(data: any) {
-    return await this.courseClient.send('course.delete', data).toPromise();
+    return await this.kafkaClient.send('course.delete', data).toPromise();
   }
 }

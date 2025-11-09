@@ -12,14 +12,14 @@ export class AppService {
   constructor(
     private readonly tokenService: TokenService,
 
-    @Inject('USER_SERVICE')
-    private readonly userClient: ClientKafka,
+    @Inject('AUTH_SERVICE')
+    private readonly AuthClient: ClientKafka,
   ) {}
 
   async onModuleInit() {
     // cần để send().toPromise() hoạt động
-    this.userClient.subscribeToResponseOf('user.getByUsername');
-    this.userClient.subscribeToResponseOf('user.create');
+    this.AuthClient.subscribeToResponseOf('user.getByUsername');
+    this.AuthClient.subscribeToResponseOf('user.create');
   }
 
   // ---------------------------
@@ -28,7 +28,7 @@ export class AppService {
   async validateUser(username: string, password: string) {
     console.log('🔍 Validating user via user-service:', username);
 
-    const user = await this.userClient
+    const user = await this.AuthClient
       .send('user.getByUsername', { username })
       .toPromise();
 
@@ -160,11 +160,7 @@ export class AppService {
     };
   }
 
-  // ---------------------------
-  // 7. REGISTER
-  // - gọi user-service tạo user
-  // - cấp token như login
-  // ---------------------------
+
   async registerUser(dto: {
     username: string;
     password: string;
@@ -172,7 +168,7 @@ export class AppService {
     name: string;
   }) {
     // user-service sẽ tự hash password khi tạo
-    const createdUser = await this.userClient
+    const createdUser = await this.AuthClient
       .send('user.create', dto)
       .toPromise();
 
@@ -222,7 +218,7 @@ export class AppService {
     const userId = decoded.sub as string;
     // username không nằm trong refresh token => tùy chọn:
     // có thể yêu cầu user-service fetch lại username
-    const user = await this.userClient
+    const user = await this.AuthClient
       .send('user.get', { id: userId })
       .toPromise();
 
