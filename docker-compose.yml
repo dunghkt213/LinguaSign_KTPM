@@ -79,5 +79,25 @@ services:
       - /app/node_modules      # ✅ Tránh đè node_modules
     command: npm run start:dev
 
+  course-service:
+    build:
+      context: ./course-service
+      dockerfile: Dockerfile
+    container_name: course-service
+    restart: unless-stopped
+    depends_on:
+      - kafka
+      - mongo
+    env_file:
+      - ./course-service/.env
+    environment:
+      - PORT=3002           
+    ports:
+      - "3002:3002"
+    volumes:
+      - ./course-service:/app
+      - /app/node_modules
+    command: npm run start:dev
+
 volumes:
   mongo-data:

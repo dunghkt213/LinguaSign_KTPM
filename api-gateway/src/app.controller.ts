@@ -18,6 +18,35 @@ import { JwtAuthGuard } from './jwt-auth.guard';
 export class AppController {
   constructor(private readonly appService: AppService) {}
 
+  // ----- Course endpoints -----
+  @Get('courses')
+  async httpGetAllCourses() {
+    return await this.appService.getAllCourses();
+  }
+
+  @Get('courses/:id')
+  async httpGetCourse(@Param('id') id: string) {
+    return await this.appService.getCourse({ id });
+  }
+
+  @Post('courses')
+  @UseGuards(JwtAuthGuard)
+  async httpCreateCourse(@Body() body: any) {
+    return await this.appService.createCourse(body);
+  }
+
+  @Put('courses/:id')
+  @UseGuards(JwtAuthGuard)
+  async httpUpdateCourse(@Param('id') id: string, @Body() body: any) {
+    return await this.appService.updateCourse({ id, dto: body });
+  }
+
+  @Delete('courses/:id')
+  @UseGuards(JwtAuthGuard)
+  async httpDeleteCourse(@Param('id') id: string) {
+    return await this.appService.deleteCourse({ id });
+  }
+  
   // -------- AUTH --------
 
   @Post('auth/register')

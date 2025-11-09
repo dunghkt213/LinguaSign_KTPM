@@ -20,6 +20,10 @@ export class AppService implements OnModuleInit, OnApplicationBootstrap {
       // User topics
       'user.create', 'user.getAll', 'user.get',
       'user.update', 'user.delete',
+
+      // Course topics
+      'course.create', 'course.getAll', 'course.get',
+      'course.update', 'course.delete',
     ];
 
     topics.forEach(topic => this.kafkaClient.subscribeToResponseOf(topic));
@@ -82,5 +86,26 @@ export class AppService implements OnModuleInit, OnApplicationBootstrap {
 
   async deleteUser(data: any) {
     return this.kafkaClient.send('user.delete', data).toPromise();
+  }
+
+  // course methods
+  async createCourse(data: any) {
+    return this.kafkaClient.send('course.create', data).toPromise();
+  }
+
+  async getAllCourses() {
+   return this.kafkaClient.send('course.getAll', {}).toPromise();
+  }
+
+  async getCourse(data: any) {
+    return await this.kafkaClient.send('course.get', data).toPromise();
+  }
+
+  async updateCourse(data: any) {
+    return await this.kafkaClient.send('course.update', data).toPromise();
+  }
+
+  async deleteCourse(data: any) {
+    return await this.kafkaClient.send('course.delete', data).toPromise();
   }
 }
