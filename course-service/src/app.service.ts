@@ -14,8 +14,8 @@ export class AppService {
     return created.save();
   }
 
-  async getAll() {
-    return this.courseModel.find().lean().exec();
+  async getAll() : Promise<Course[]> {
+    return await this.courseModel.find().exec();
   }
 
   async getById(id: string) {
