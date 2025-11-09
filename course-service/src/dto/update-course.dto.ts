@@ -1,6 +1,6 @@
 export class UpdateCourseDto {
   title?: string;
-  duration?: number;
+  duration?: string;
   thumbnail?: string;
   video?: string;
   description?: string;

@@ -1,6 +1,6 @@
 export class CreateCourseDto {
   title: string;
-  duration?: number;
+  duration?: string;
   thumbnail?: string;
   video?: string;
   description?: string;

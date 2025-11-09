@@ -20,6 +20,10 @@ export class AppService implements OnModuleInit, OnApplicationBootstrap {
       // User topics
       'user.create', 'user.getAll', 'user.get',
       'user.update', 'user.delete',
+
+      // Course topics
+      'course.create', 'course.getAll', 'course.get',
+      'course.update', 'course.delete',
     ];
 
     topics.forEach(topic => this.kafkaClient.subscribeToResponseOf(topic));

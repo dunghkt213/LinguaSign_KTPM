@@ -7,7 +7,7 @@ export class Course extends Document {
   title: string;
 
   @Prop()
-  duration?: number;
+  duration?: string;
 
   @Prop()
   thumbnail?: string;
