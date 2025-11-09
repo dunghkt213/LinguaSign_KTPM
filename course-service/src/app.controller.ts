@@ -6,39 +6,6 @@ import { AppService } from './app.service';
 export class AppController {
   constructor(private readonly appService: AppService) {}
 
-  // HTTP endpoints (optional)
-  @Get('courses')
-  getAllCourses() {
-    return { success: true, data: this.appService.getAll() };
-  }
-
-  @Get('courses/:id')
-  getCourse(@Param('id') id: string) {
-    try {
-      return { success: true, data: this.appService.getById(id) };
-    } catch (err) {
-      return { success: false, error: err.message };
-    }
-  }
-
-  @Post('courses')
-  createCourse(@Body() body: any) {
-    return { success: true, data: this.appService.create(body) };
-  }
-
-  @Put('courses/:id')
-  updateCourse(@Param('id') id: string, @Body() body: any) {
-    try {
-      return { success: true, data: this.appService.update(id, body) };
-    } catch (err) {
-      return { success: false, error: err.message };
-    }
-  }
-
-  @Delete('courses/:id')
-  deleteCourse(@Param('id') id: string) {
-    return this.appService.remove(id);
-  }
 
   // Kafka message handlers (api-gateway will send these)
   @MessagePattern('course.create')
@@ -52,8 +19,8 @@ export class AppController {
   }
 
   @MessagePattern('course.getAll')
-  handleGetAll() {
-    return { success: true, data: this.appService.getAll() };
+  async handleGetAll() {
+    return await this.appService.getAll() ;
   }
 
   @MessagePattern('course.get')

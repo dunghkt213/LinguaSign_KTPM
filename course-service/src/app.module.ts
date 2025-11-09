@@ -10,7 +10,7 @@ import { Course, CourseSchema } from './schemas/course.schema';
     ConfigModule.forRoot({ isGlobal: true }),
     MongooseModule.forRootAsync({
       useFactory: (cfg: ConfigService) =>
-        ({ uri: cfg.get<string>('MONGO_URI') || 'mongodb://mongo:27017/course_db' }),
+        ({ uri: cfg.get<string>('MONGO_URI')}),
       inject: [ConfigService],
     }),
     MongooseModule.forFeature([{ name: Course.name, schema: CourseSchema }]),
