@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, isValidObjectId } from 'mongoose';
 import { Course } from './schemas/course.schema';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
@@ -18,20 +18,39 @@ export class AppService {
     return await this.courseModel.find().exec();
   }
 
-  async getById(id: string) {
-    const c = await this.courseModel.findById(id).exec();
-    if (!c) throw new NotFoundException('Course not found');
-    return c;
+  async getById(id: string): Promise<Course> {
+    if (!isValidObjectId(id)) {
+      throw new NotFoundException('Course not found');
+    }
+
+    const course = await this.courseModel.findById(id).exec();
+    if (!course) {
+      throw new NotFoundException('Course not found');
+    }
+    return course;
   }
 
-  async update(id: string, dto: UpdateCourseDto) {
-    const updated = await this.courseModel.findByIdAndUpdate(id, dto, { new: true }).exec();
-    if (!updated) throw new NotFoundException('Course not found');
+  async update(id: string, dto: UpdateCourseDto): Promise<Course> {
+    if (!isValidObjectId(id)) {
+      throw new NotFoundException('Course not found');
+    }
+
+    const updated = await this.courseModel
+      .findByIdAndUpdate(id, dto, { new: true, runValidators: true })
+      .exec();
+
+    if (!updated) {
+      throw new NotFoundException('Course not found');
+    }
     return updated;
   }
 
-  async remove(id: string) {
-    const r = await this.courseModel.findByIdAndDelete(id).exec();
-    return { deleted: !!r };
+  async remove(id: string): Promise<{ deleted: boolean; deletedId?: string }> {
+    if (!isValidObjectId(id)) {
+      return { deleted: false };
+    }
+
+    const deleted = await this.courseModel.findByIdAndDelete(id).exec();
+    return { deleted: !!deleted, deletedId: deleted ? String(deleted._id) : undefined };
   }
 }

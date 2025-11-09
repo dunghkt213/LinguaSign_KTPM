@@ -6,46 +6,54 @@ import { AppService } from './app.service';
 export class AppController {
   constructor(private readonly appService: AppService) {}
 
-
   // Kafka message handlers (api-gateway will send these)
   @MessagePattern('course.create')
-  handleCreate(@Payload() data: any) {
+  async handleCreate(@Payload() data: any) {
     try {
-      const created = this.appService.create(data);
+      const created = await this.appService.create(data);
       return { success: true, message: 'Course created', data: created };
     } catch (err) {
-      return { success: false, error: err.message };
+      return { success: false, error: err?.message ?? String(err) };
     }
   }
 
   @MessagePattern('course.getAll')
   async handleGetAll() {
-    return await this.appService.getAll() ;
+    try {
+      const all = await this.appService.getAll();
+      return { success: true, data: all };
+    } catch (err) {
+      return { success: false, error: err?.message ?? String(err) };
+    }
   }
 
   @MessagePattern('course.get')
-  handleGet(@Payload() data: { id: string }) {
+  async handleGet(@Payload() data: { id: string }) {
     try {
-      const c = this.appService.getById(data?.id);
+      const c = await this.appService.getById(data?.id);
       return { success: true, data: c };
     } catch (err) {
-      return { success: false, error: err.message };
+      return { success: false, error: err?.message ?? String(err) };
     }
   }
 
   @MessagePattern('course.update')
-  handleUpdate(@Payload() data: { id: string; dto: any }) {
+  async handleUpdate(@Payload() data: { id: string; dto: any }) {
     try {
-      const updated = this.appService.update(data.id, data.dto);
+      const updated = await this.appService.update(data.id, data.dto);
       return { success: true, data: updated };
     } catch (err) {
-      return { success: false, error: err.message };
+      return { success: false, error: err?.message ?? String(err) };
     }
   }
 
   @MessagePattern('course.delete')
-  handleDelete(@Payload() data: { id: string }) {
-    const res = this.appService.remove(data.id);
-    return { success: true, data: res };
+  async handleDelete(@Payload() data: { id: string }) {
+    try {
+      const res = await this.appService.remove(data.id);
+      return { success: true, data: res };
+    } catch (err) {
+      return { success: false, error: err?.message ?? String(err) };
+    }
   }
 }
