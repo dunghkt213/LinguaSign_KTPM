@@ -24,6 +24,8 @@ export class AppService implements OnModuleInit, OnApplicationBootstrap {
       // Course topics
       'course.create', 'course.getAll', 'course.get',
       'course.update', 'course.delete',
+
+      'progress.create', 'progress.get', 'progress.update', 'progress.delete',
     ];
 
     topics.forEach(topic => this.kafkaClient.subscribeToResponseOf(topic));
@@ -42,11 +44,11 @@ export class AppService implements OnModuleInit, OnApplicationBootstrap {
   // ============================================================
 
   async register(data: any) {
-  console.log('🧭 Kafka connected?', this.kafkaClient['producer'] ? '✅ yes' : '❌ no');
-  console.log('🧩 Patterns now:', this.kafkaClient['responsePatterns']);
-  console.log('🧩 Sending data:', data);
-  return this.kafkaClient.send('auth.register', data).toPromise();
-}
+    console.log('🧭 Kafka connected?', this.kafkaClient['producer'] ? '✅ yes' : '❌ no');
+    console.log('🧩 Patterns now:', this.kafkaClient['responsePatterns']);
+    console.log('🧩 Sending data:', data);
+    return this.kafkaClient.send('auth.register', data).toPromise();
+  }
 
   async login(data: any) {
     return this.kafkaClient.send('auth.login', data).toPromise();
@@ -107,5 +109,22 @@ export class AppService implements OnModuleInit, OnApplicationBootstrap {
 
   async deleteCourse(data: any) {
     return await this.kafkaClient.send('course.delete', data).toPromise();
+  }
+
+  // progress methods
+  async createProgress(data: any) {
+    return this.kafkaClient.send('progress.create', data).toPromise();
+  }
+
+  async getProgress(data: any) {
+    return this.kafkaClient.send('progress.get', data).toPromise();
+  }
+
+  async updateProgress(data: any) {
+    return this.kafkaClient.send('progress.update', data).toPromise();
+  }
+
+  async deleteProgress(data: any) {
+    return this.kafkaClient.send('progress.delete', data).toPromise();
   }
 }
