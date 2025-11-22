@@ -99,5 +99,21 @@ services:
       - /app/node_modules
     command: npm run start:dev
 
+  noti-service:
+    build:
+      context: ./noti-service
+      dockerfile: Dockerfile
+    container_name: noti-service
+    restart: unless-stopped
+    depends_on:
+      - kafka
+      - mongo
+    env_file:
+      - ./noti-service/.env
+    volumes:
+      - ./noti-service:/app
+      - /app/node_modules
+    command: npm run start:dev
+
 volumes:
   mongo-data:
