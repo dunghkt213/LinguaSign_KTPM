@@ -51,6 +51,20 @@ export class AppController {
     return await this.appService.deleteProgress({ id });
   }
 
+  // Notification endpoints
+  @Post('test/notifications')
+  async testCreateNotification(@Body() body: any) {
+    return await this.appService.createNotification(body);
+  }
+
+  @Get('test/notifications')
+async testGetNotifications() {
+  return await this.appService.getAllNotifications({
+    userId: '6730afc8b9a1b5d983c33abc',
+    page: 1,
+    limit: 10
+  });
+}
   // ----- Course endpoints -----
   @Get('courses')
   async httpGetAllCourses() {

@@ -104,6 +104,11 @@ services:
       context: ./learning-progress-service
       dockerfile: Dockerfile
     container_name: learning-progress-service
+  noti-service:
+    build:
+      context: ./noti-service
+      dockerfile: Dockerfile
+    container_name: noti-service
     restart: unless-stopped
     depends_on:
       - kafka
@@ -116,6 +121,9 @@ services:
       - "3004:3000"
     volumes:
       - ./learning-progress-service:/app
+      - ./noti-service/.env
+    volumes:
+      - ./noti-service:/app
       - /app/node_modules
     command: npm run start:dev
 

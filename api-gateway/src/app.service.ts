@@ -26,6 +26,9 @@ export class AppService implements OnModuleInit, OnApplicationBootstrap {
       'course.update', 'course.delete',
 
       'progress.create', 'progress.get', 'progress.update', 'progress.delete',
+      // Notification topics
+      'noti.create', 'noti.get', 'noti.getAll',
+      'noti.update', 'noti.updateReadStatus', 'noti.delete',
     ];
 
     topics.forEach(topic => this.kafkaClient.subscribeToResponseOf(topic));
@@ -126,5 +129,28 @@ export class AppService implements OnModuleInit, OnApplicationBootstrap {
 
   async deleteProgress(data: any) {
     return this.kafkaClient.send('progress.delete', data).toPromise();
+  // notification methods
+  async createNotification(data: any) {
+    return await this.kafkaClient.send('noti.create', data).toPromise();
+  }
+
+  async getNotification(data: any) {
+    return await this.kafkaClient.send('noti.get', data).toPromise();
+  }
+
+  async getAllNotifications(data: any) {
+    return await this.kafkaClient.send('noti.getAll', data).toPromise();
+  }
+
+  async updateNotification(data: any) {
+    return await this.kafkaClient.send('noti.update', data).toPromise();
+  }
+
+  async updateReadStatus(data: any) {
+    return await this.kafkaClient.send('noti.updateReadStatus', data).toPromise();
+  }
+
+  async deleteNotification(data: any) {
+    return await this.kafkaClient.send('noti.delete', data).toPromise();
   }
 }
