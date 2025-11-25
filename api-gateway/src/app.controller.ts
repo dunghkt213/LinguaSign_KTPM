@@ -18,6 +18,39 @@ import { JwtAuthGuard } from './jwt-auth.guard';
 export class AppController {
   constructor(private readonly appService: AppService) {}
 
+  // ----- Progress endpoints -----
+  @UseGuards(JwtAuthGuard)
+  @Post('progress')
+  async httpCreateProgress(@Body() body: any) {
+    return await this.appService.createProgress(body);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('progress/:id')
+  async httpGetProgress(@Param('id') id: string) {
+    return await this.appService.getProgress({ id });
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('progress')
+  async httpQueryProgress(@Param() params, @Body() body, @Req() req) {
+    // forward query params
+    const { userId, courseId } = req.query;
+    return await this.appService.getProgress({ userId, courseId });
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Put('progress/:id')
+  async httpUpdateProgress(@Param('id') id: string, @Body() body: any) {
+    return await this.appService.updateProgress({ id, dto: body });
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete('progress/:id')
+  async httpDeleteProgress(@Param('id') id: string) {
+    return await this.appService.deleteProgress({ id });
+  }
+
   // Notification endpoints
   @Post('test/notifications')
   async testCreateNotification(@Body() body: any) {

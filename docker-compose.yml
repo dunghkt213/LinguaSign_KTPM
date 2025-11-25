@@ -99,6 +99,11 @@ services:
       - /app/node_modules
     command: npm run start:dev
 
+  learning-progress-service:
+    build:
+      context: ./learning-progress-service
+      dockerfile: Dockerfile
+    container_name: learning-progress-service
   noti-service:
     build:
       context: ./noti-service
@@ -109,6 +114,13 @@ services:
       - kafka
       - mongo
     env_file:
+      - ./learning-progress-service/.env
+    environment:
+      - PORT=3004
+    ports:
+      - "3004:3000"
+    volumes:
+      - ./learning-progress-service:/app
       - ./noti-service/.env
     volumes:
       - ./noti-service:/app
