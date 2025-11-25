@@ -14,7 +14,6 @@ import { Noti, NotiSchema } from './schemas/noti.schema';
     MongooseModule.forRootAsync({
       useFactory: (config: ConfigService) => {
         const uri = config.get<string>('MONGO_URI');
-        console.log('🧩 MONGO_URI:', uri);
         return { uri };
       },
       inject: [ConfigService],
