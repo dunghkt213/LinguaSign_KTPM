@@ -52,6 +52,7 @@ services:
     container_name: user-service
     volumes:
       - ./user-service:/app
+      - /app/node_modules
     command: npm run start:dev
     depends_on:
       - kafka
@@ -104,6 +105,17 @@ services:
       context: ./learning-progress-service
       dockerfile: Dockerfile
     container_name: learning-progress-service
+    restart: unless-stopped
+    depends_on:
+      - kafka
+      - mongo
+    env_file:
+      - ./learning-progress-service/.env
+    volumes:
+      - ./learning-progress-service:/app
+      - /app/node_modules
+    command: npm run start:dev
+
   noti-service:
     build:
       context: ./noti-service
@@ -114,13 +126,6 @@ services:
       - kafka
       - mongo
     env_file:
-      - ./learning-progress-service/.env
-    environment:
-      - PORT=3004
-    ports:
-      - "3004:3000"
-    volumes:
-      - ./learning-progress-service:/app
       - ./noti-service/.env
     volumes:
       - ./noti-service:/app
