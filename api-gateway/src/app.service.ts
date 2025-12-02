@@ -129,7 +129,11 @@ export class AppService implements OnModuleInit, OnApplicationBootstrap {
 
   async deleteProgress(data: any) {
     return this.kafkaClient.send('progress.delete', data).toPromise();
-  // notification methods
+  }
+
+  // ============================================================
+  // NOTIFICATIONS
+  // ============================================================
   async createNotification(data: any) {
     return await this.kafkaClient.send('noti.create', data).toPromise();
   }
