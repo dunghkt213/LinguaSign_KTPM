@@ -6,6 +6,15 @@ import {
 } from '@nestjs/common';
 import * as jwt from 'jsonwebtoken';
 
+declare module 'express' {
+  interface Request {
+    user?: {
+      id: string;
+      username: string;
+    };
+  }
+}
+
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean {
