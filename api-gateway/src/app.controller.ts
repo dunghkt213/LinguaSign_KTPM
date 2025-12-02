@@ -9,6 +9,8 @@ import {
   Res,
   Req,
   UseGuards,
+  Patch,
+  Query,
 } from '@nestjs/common';
 import { AppService } from './app.service';
 import type { Response, Request } from 'express';
@@ -51,20 +53,60 @@ export class AppController {
     return await this.appService.deleteProgress({ id });
   }
 
-  // Notification endpoints
-  @Post('test/notifications')
-  async testCreateNotification(@Body() body: any) {
-    return await this.appService.createNotification(body);
+  // ----- Notification endpoints -----
+  @UseGuards(JwtAuthGuard)
+  @Post('notifications')
+  async httpCreateNotification(@Body() body: any, @Req() req: Request) {
+    const userId = req.user?.id;
+    return await this.appService.createNotification({ ...body, userId });
   }
 
-  @Get('test/notifications')
-async testGetNotifications() {
-  return await this.appService.getAllNotifications({
-    userId: '6730afc8b9a1b5d983c33abc',
-    page: 1,
-    limit: 10
-  });
-}
+  @UseGuards(JwtAuthGuard)
+  @Get('notifications')
+  async httpGetNotifications(
+    @Req() req: Request,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    const userId = req.user?.id;
+    const parsedPage = Number(page);
+    const parsedLimit = Number(limit);
+    const pageNumber = Number.isFinite(parsedPage) && parsedPage > 0 ? parsedPage : 1;
+    const limitNumber = Number.isFinite(parsedLimit) && parsedLimit > 0 ? parsedLimit : 10;
+
+    return await this.appService.getAllNotifications({
+      userId,
+      page: pageNumber,
+      limit: limitNumber,
+    });
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('notifications/:id')
+  async httpGetNotification(@Param('id') id: string) {
+    return await this.appService.getNotification({ id });
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Put('notifications/:id')
+  async httpUpdateNotification(@Param('id') id: string, @Body() body: any) {
+    return await this.appService.updateNotification({ id, updateData: body });
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('notifications/:id/read')
+  async httpUpdateReadStatus(
+    @Param('id') id: string,
+    @Body('read') read: boolean,
+  ) {
+    return await this.appService.updateReadStatus({ id, read });
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete('notifications/:id')
+  async httpDeleteNotification(@Param('id') id: string) {
+    return await this.appService.deleteNotification({ id });
+  }
   // ----- Course endpoints -----
   @Get('courses')
   async httpGetAllCourses() {
