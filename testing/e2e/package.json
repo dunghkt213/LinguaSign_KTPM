@@ -1,0 +1,26 @@
+{
+    "name": "linguasign-e2e-tests",
+    "version": "1.0.0",
+    "description": "End-to-end tests for LinguaSign microservices",
+    "main": "e2e-test-suite.js",
+    "scripts": {
+        "test": "node e2e-test-suite.js",
+        "test:watch": "nodemon e2e-test-suite.js",
+        "test:debug": "node --inspect e2e-test-suite.js"
+    },
+    "keywords": [
+        "e2e",
+        "testing",
+        "microservices",
+        "kafka"
+    ],
+    "author": "LinguaSign Team",
+    "license": "MIT",
+    "dependencies": {
+        "axios": "^1.6.0",
+        "dotenv": "^16.3.1"
+    },
+    "devDependencies": {
+        "nodemon": "^3.0.1"
+    }
+}

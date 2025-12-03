@@ -1,0 +1,88 @@
+# Prometheus configuration for Kafka monitoring
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    monitor: 'linguasign-monitor'
+    environment: 'development'
+
+# Alerting configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          # - alertmanager:9093
+
+# Alert rules
+rule_files:
+  - "alerts/*.yml"
+
+# Scrape configurations
+scrape_configs:
+  # Kafka Exporter
+  - job_name: 'kafka-exporter'
+    static_configs:
+      - targets: ['kafka-exporter:9308']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'kafka-broker'
+
+  # JMX Exporter for Kafka Broker
+  - job_name: 'kafka-broker'
+    static_configs:
+      - targets: ['kafka:9999']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+
+  # API Gateway metrics
+  - job_name: 'api-gateway'
+    static_configs:
+      - targets: ['api-gateway:3000']
+    metrics_path: '/metrics'
+
+  # Auth Service
+  - job_name: 'auth-service'
+    static_configs:
+      - targets: ['auth-service:3001']
+    metrics_path: '/metrics'
+
+  # Course Service
+  - job_name: 'course-service'
+    static_configs:
+      - targets: ['course-service:3002']
+    metrics_path: '/metrics'
+
+  # Learning Progress Service
+  - job_name: 'learning-progress-service'
+    static_configs:
+      - targets: ['learning-progress-service:3003']
+    metrics_path: '/metrics'
+
+  # User Service
+  - job_name: 'user-service'
+    static_configs:
+      - targets: ['user-service:3004']
+    metrics_path: '/metrics'
+
+  # Notification Service
+  - job_name: 'noti-service'
+    static_configs:
+      - targets: ['noti-service:3005']
+    metrics_path: '/metrics'
+
+  # Node Exporter (system metrics)
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+
+  # MongoDB Exporter
+  - job_name: 'mongodb-exporter'
+    static_configs:
+      - targets: ['mongodb-exporter:9216']
+
+  # Prometheus itself
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
