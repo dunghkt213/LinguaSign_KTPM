@@ -12,6 +12,9 @@ export class TokenService {
 
   // Lưu refresh token mới vào DB
   async saveToken(userId: string, refreshToken: string, expiresAt: Date) {
+    // Xóa các token cũ của user này để tránh duplicate key error
+    await this.tokenModel.deleteMany({ userId }).exec();
+    
     return this.tokenModel.create({
       userId,
       token: refreshToken,
