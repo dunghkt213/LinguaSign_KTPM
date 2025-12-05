@@ -5,6 +5,7 @@ import { Connection } from 'mongoose';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { User, UserSchema } from './schemas/user.schema';
+import { CacheModule } from './cache/cache.module';
 
 @Module({
   imports: [
@@ -29,6 +30,9 @@ import { User, UserSchema } from './schemas/user.schema';
 
     // 3️⃣ Sau khi có connection, mới đăng ký schema
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
+    
+    // 4️⃣ Cache Module với Redis
+    CacheModule,
   ],
 
   controllers: [AppController],

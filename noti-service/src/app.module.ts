@@ -5,6 +5,7 @@ import { Connection } from 'mongoose';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { Noti, NotiSchema } from './schemas/noti.schema';
+import { CacheModule } from './cache/cache.module';
 
 @Module({
   imports: [
@@ -21,6 +22,9 @@ import { Noti, NotiSchema } from './schemas/noti.schema';
 
     // Đăng ký schema User
     MongooseModule.forFeature([{ name: Noti.name, schema: NotiSchema }]),
+    
+    // Cache Module
+    CacheModule,
   ],
   controllers: [AppController],
   providers: [AppService],

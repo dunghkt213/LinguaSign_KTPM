@@ -3,6 +3,8 @@ import {
   UnauthorizedException,
   Inject,
 } from '@nestjs/common';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import type { Cache } from 'cache-manager';
 import { ClientKafka } from '@nestjs/microservices';
 import * as bcrypt from 'bcryptjs';
 import * as jwt from 'jsonwebtoken';
@@ -14,6 +16,9 @@ export class AppService {
 
     @Inject('AUTH_SERVICE')
     private readonly AuthClient: ClientKafka,
+    
+    @Inject(CACHE_MANAGER)
+    private cacheManager: Cache,
   ) {}
 
   async onModuleInit() {
@@ -28,9 +33,25 @@ export class AppService {
   async validateUser(username: string, password: string) {
     console.log('🔍 Validating user via user-service:', username);
 
-    const user = await this.AuthClient
-      .send('user.getByUsername', { username })
-      .toPromise();
+    const cacheKey = `auth:user:${username}`;
+    
+    // 1. Check cache
+    let user = await this.cacheManager.get<any>(cacheKey);
+    
+    if (user) {
+      console.log('✅ User Cache HIT');
+    } else {
+      // 2. Cache MISS - query user-service
+      console.log('❌ User Cache MISS - querying user-service');
+      user = await this.AuthClient
+        .send('user.getByUsername', { username })
+        .toPromise();
+      
+      if (user) {
+        // 3. Cache 1 phút (vì password có thể thay đổi)
+        await this.cacheManager.set(cacheKey, user, 60000);
+      }
+    }
 
     if (!user) {
       throw new UnauthorizedException('User not found');

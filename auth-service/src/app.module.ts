@@ -6,6 +6,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TokenModule } from './token/token.module';
 import { ClientsModule, Transport } from '@nestjs/microservices';
+import { CacheModule } from './cache/cache.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
     }),
 
     TokenModule,
+    CacheModule,
     ClientsModule.register([
       {
         name: 'AUTH_SERVICE',

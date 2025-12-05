@@ -132,5 +132,16 @@ services:
       - /app/node_modules
     command: npm run start:dev
 
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+
 volumes:
   mongo-data:
+  redis-data:

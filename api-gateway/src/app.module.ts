@@ -2,9 +2,11 @@ import { Module } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { CacheModule } from './cache/cache.module';
 
 @Module({
   imports: [
+     CacheModule,
      ClientsModule.register([
       {
         name: 'GATEWAY_SERVICE',
