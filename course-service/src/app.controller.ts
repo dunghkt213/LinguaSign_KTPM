@@ -10,7 +10,27 @@ export class AppController {
   @MessagePattern('course.create')
   async handleCreate(@Payload() data: any) {
     try {
-      const created = await this.appService.create(data);
+      // data có thể chứa: { title, description, videoBuffer, videoFileName, ... }
+      let video: string | null = null;
+      
+      // Nếu có video buffer, upload lên MinIO trước
+      if (data.videoBuffer && data.videoFileName) {
+        const uploadResult = await this.appService.uploadVideo(
+          data.videoFileName,
+          data.videoBuffer
+        );
+        video = uploadResult.url;
+      }
+
+      // Tạo course với video link
+      const courseData = {
+        ...data,
+        video, // Lưu link video vào DB
+      };
+      delete courseData.videoBuffer; // Xóa buffer khỏi data
+      delete courseData.videoFileName;
+
+      const created = await this.appService.create(courseData);
       return { success: true, message: 'Course created', data: created };
     } catch (err) {
       return { success: false, error: err?.message ?? String(err) };
@@ -40,7 +60,25 @@ export class AppController {
   @MessagePattern('course.update')
   async handleUpdate(@Payload() data: { id: string; dto: any }) {
     try {
-      const updated = await this.appService.update(data.id, data.dto);
+      let video: string | undefined = data.dto.video;
+
+      // Nếu có video mới, upload lên MinIO
+      if (data.dto.videoBuffer && data.dto.videoFileName) {
+        const uploadResult = await this.appService.uploadVideo(
+          data.dto.videoFileName,
+          data.dto.videoBuffer
+        );
+        video = uploadResult.url;
+      }
+
+      const updateData = {
+        ...data.dto,
+        video,
+      };
+      delete updateData.videoBuffer;
+      delete updateData.videoFileName;
+
+      const updated = await this.appService.update(data.id, updateData);
       return { success: true, data: updated };
     } catch (err) {
       return { success: false, error: err?.message ?? String(err) };
@@ -52,6 +90,26 @@ export class AppController {
     try {
       const res = await this.appService.remove(data.id);
       return { success: true, data: res };
+    } catch (err) {
+      return { success: false, error: err?.message ?? String(err) };
+    }
+  }
+
+  @MessagePattern('course.getVideoUrl')
+  async handleGetVideoUrl(@Payload() data: { fileName: string }) {
+    try {
+      const url = await this.appService.getVideoUrl(data.fileName);
+      return { success: true, data: { url } };
+    } catch (err) {
+      return { success: false, error: err?.message ?? String(err) };
+    }
+  }
+
+  @MessagePattern('course.getVideoMetadata')
+  async handleGetVideoMetadata(@Payload() data: { fileName: string }) {
+    try {
+      const metadata = await this.appService.getVideoMetadata(data.fileName);
+      return { success: true, data: metadata };
     } catch (err) {
       return { success: false, error: err?.message ?? String(err) };
     }
