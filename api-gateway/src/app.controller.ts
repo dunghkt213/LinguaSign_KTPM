@@ -20,6 +20,11 @@ import { JwtAuthGuard } from './jwt-auth.guard';
 export class AppController {
   constructor(private readonly appService: AppService) {}
 
+  @Get('health')
+  healthCheck() {
+    return { status: 'ok', timestamp: new Date().toISOString() };
+  }
+
   // ----- Progress endpoints -----
   @UseGuards(JwtAuthGuard)
   @Post('progress')

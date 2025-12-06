@@ -1,6 +1,7 @@
-import { Injectable, OnModuleInit, OnApplicationBootstrap } from '@nestjs/common';
+import { Injectable, OnModuleInit, OnApplicationBootstrap, RequestTimeoutException } from '@nestjs/common';
 import { ClientKafka } from '@nestjs/microservices';
 import { Inject } from '@nestjs/common';
+import { timeout, catchError, throwError } from 'rxjs';
 
 @Injectable()
 export class AppService implements OnModuleInit, OnApplicationBootstrap {
@@ -50,23 +51,43 @@ export class AppService implements OnModuleInit, OnApplicationBootstrap {
     console.log('🧭 Kafka connected?', this.kafkaClient['producer'] ? '✅ yes' : '❌ no');
     console.log('🧩 Patterns now:', this.kafkaClient['responsePatterns']);
     console.log('🧩 Sending data:', data);
-    return this.kafkaClient.send('auth.register', data).toPromise();
+    return this.kafkaClient.send('auth.register', data)
+      .pipe(
+        timeout(30000),
+        catchError(err => throwError(() => new RequestTimeoutException('Auth service timeout')))
+      ).toPromise();
   }
 
   async login(data: any) {
-    return this.kafkaClient.send('auth.login', data).toPromise();
+    return this.kafkaClient.send('auth.login', data)
+      .pipe(
+        timeout(30000),
+        catchError(err => throwError(() => new RequestTimeoutException('Auth service timeout')))
+      ).toPromise();
   }
 
   async refresh(data: any) {
-    return this.kafkaClient.send('auth.refresh', data).toPromise();
+    return this.kafkaClient.send('auth.refresh', data)
+      .pipe(
+        timeout(30000),
+        catchError(err => throwError(() => new RequestTimeoutException('Auth service timeout')))
+      ).toPromise();
   }
 
   async verify(data: any) {
-    return this.kafkaClient.send('auth.verify', data).toPromise();
+    return this.kafkaClient.send('auth.verify', data)
+      .pipe(
+        timeout(30000),
+        catchError(err => throwError(() => new RequestTimeoutException('Auth service timeout')))
+      ).toPromise();
   }
 
   async revoke(data: any) {
-    return this.kafkaClient.send('auth.revoke', data).toPromise();
+    return this.kafkaClient.send('auth.revoke', data)
+      .pipe(
+        timeout(30000),
+        catchError(err => throwError(() => new RequestTimeoutException('Auth service timeout')))
+      ).toPromise();
   }
 
   // ============================================================
@@ -74,87 +95,167 @@ export class AppService implements OnModuleInit, OnApplicationBootstrap {
   // ============================================================
 
   async createUser(data: any) {
-    return this.kafkaClient.send('user.create', data).toPromise();
+    return this.kafkaClient.send('user.create', data)
+      .pipe(
+        timeout(30000),
+        catchError(err => throwError(() => new RequestTimeoutException('User service timeout')))
+      ).toPromise();
   }
 
   async getAllUsers() {
-    return this.kafkaClient.send('user.getAll', {}).toPromise();
+    return this.kafkaClient.send('user.getAll', {})
+      .pipe(
+        timeout(30000),
+        catchError(err => throwError(() => new RequestTimeoutException('User service timeout')))
+      ).toPromise();
   }
 
   async getUser(data: any) {
-    return this.kafkaClient.send('user.get', data).toPromise();
+    return this.kafkaClient.send('user.get', data)
+      .pipe(
+        timeout(30000),
+        catchError(err => throwError(() => new RequestTimeoutException('User service timeout')))
+      ).toPromise();
   }
 
   async updateUser(data: any) {
-    return this.kafkaClient.send('user.update', data).toPromise();
+    return this.kafkaClient.send('user.update', data)
+      .pipe(
+        timeout(30000),
+        catchError(err => throwError(() => new RequestTimeoutException('User service timeout')))
+      ).toPromise();
   }
 
   async deleteUser(data: any) {
-    return this.kafkaClient.send('user.delete', data).toPromise();
+    return this.kafkaClient.send('user.delete', data)
+      .pipe(
+        timeout(30000),
+        catchError(err => throwError(() => new RequestTimeoutException('User service timeout')))
+      ).toPromise();
   }
 
   // course methods
   async createCourse(data: any) {
-    return this.kafkaClient.send('course.create', data).toPromise();
+    return this.kafkaClient.send('course.create', data)
+      .pipe(
+        timeout(30000),
+        catchError(err => throwError(() => new RequestTimeoutException('Course service timeout')))
+      ).toPromise();
   }
 
   async getAllCourses() {
-   return this.kafkaClient.send('course.getAll', {}).toPromise();
+   return this.kafkaClient.send('course.getAll', {})
+     .pipe(
+       timeout(30000),
+       catchError(err => throwError(() => new RequestTimeoutException('Course service timeout')))
+     ).toPromise();
   }
 
   async getCourse(data: any) {
-    return await this.kafkaClient.send('course.get', data).toPromise();
+    return this.kafkaClient.send('course.get', data)
+      .pipe(
+        timeout(30000),
+        catchError(err => throwError(() => new RequestTimeoutException('Course service timeout')))
+      ).toPromise();
   }
 
   async updateCourse(data: any) {
-    return await this.kafkaClient.send('course.update', data).toPromise();
+    return this.kafkaClient.send('course.update', data)
+      .pipe(
+        timeout(30000),
+        catchError(err => throwError(() => new RequestTimeoutException('Course service timeout')))
+      ).toPromise();
   }
 
   async deleteCourse(data: any) {
-    return await this.kafkaClient.send('course.delete', data).toPromise();
+    return this.kafkaClient.send('course.delete', data)
+      .pipe(
+        timeout(30000),
+        catchError(err => throwError(() => new RequestTimeoutException('Course service timeout')))
+      ).toPromise();
   }
 
   // progress methods
   async createProgress(data: any) {
-    return this.kafkaClient.send('progress.create', data).toPromise();
+    return this.kafkaClient.send('progress.create', data)
+      .pipe(
+        timeout(30000),
+        catchError(err => throwError(() => new RequestTimeoutException('Progress service timeout')))
+      ).toPromise();
   }
 
   async getProgress(data: any) {
-    return this.kafkaClient.send('progress.get', data).toPromise();
+    return this.kafkaClient.send('progress.get', data)
+      .pipe(
+        timeout(30000),
+        catchError(err => throwError(() => new RequestTimeoutException('Progress service timeout')))
+      ).toPromise();
   }
 
   async updateProgress(data: any) {
-    return this.kafkaClient.send('progress.update', data).toPromise();
+    return this.kafkaClient.send('progress.update', data)
+      .pipe(
+        timeout(30000),
+        catchError(err => throwError(() => new RequestTimeoutException('Progress service timeout')))
+      ).toPromise();
   }
 
   async deleteProgress(data: any) {
-    return this.kafkaClient.send('progress.delete', data).toPromise();
+    return this.kafkaClient.send('progress.delete', data)
+      .pipe(
+        timeout(30000),
+        catchError(err => throwError(() => new RequestTimeoutException('Progress service timeout')))
+      ).toPromise();
   }
 
   // ============================================================
   // NOTIFICATIONS
   // ============================================================
   async createNotification(data: any) {
-    return await this.kafkaClient.send('noti.create', data).toPromise();
+    return this.kafkaClient.send('noti.create', data)
+      .pipe(
+        timeout(30000),
+        catchError(err => throwError(() => new RequestTimeoutException('Notification service timeout')))
+      ).toPromise();
   }
 
   async getNotification(data: any) {
-    return await this.kafkaClient.send('noti.get', data).toPromise();
+    return this.kafkaClient.send('noti.get', data)
+      .pipe(
+        timeout(30000),
+        catchError(err => throwError(() => new RequestTimeoutException('Notification service timeout')))
+      ).toPromise();
   }
 
   async getAllNotifications(data: any) {
-    return await this.kafkaClient.send('noti.getAll', data).toPromise();
+    return this.kafkaClient.send('noti.getAll', data)
+      .pipe(
+        timeout(30000),
+        catchError(err => throwError(() => new RequestTimeoutException('Notification service timeout')))
+      ).toPromise();
   }
 
   async updateNotification(data: any) {
-    return await this.kafkaClient.send('noti.update', data).toPromise();
+    return this.kafkaClient.send('noti.update', data)
+      .pipe(
+        timeout(30000),
+        catchError(err => throwError(() => new RequestTimeoutException('Notification service timeout')))
+      ).toPromise();
   }
 
   async updateReadStatus(data: any) {
-    return await this.kafkaClient.send('noti.updateReadStatus', data).toPromise();
+    return this.kafkaClient.send('noti.updateReadStatus', data)
+      .pipe(
+        timeout(30000),
+        catchError(err => throwError(() => new RequestTimeoutException('Notification service timeout')))
+      ).toPromise();
   }
 
   async deleteNotification(data: any) {
-    return await this.kafkaClient.send('noti.delete', data).toPromise();
+    return this.kafkaClient.send('noti.delete', data)
+      .pipe(
+        timeout(30000),
+        catchError(err => throwError(() => new RequestTimeoutException('Notification service timeout')))
+      ).toPromise();
   }
 }
