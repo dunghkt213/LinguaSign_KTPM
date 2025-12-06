@@ -9,13 +9,19 @@ import { CacheModule } from './cache/cache.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
+   ConfigModule.forRoot({ isGlobal: true }),
 
-    // Kết nối MongoDB
     MongooseModule.forRootAsync({
       useFactory: (config: ConfigService) => {
         const uri = config.get<string>('MONGO_URI');
-        return { uri };
+        console.log('🧩 MONGO_URI:', uri);
+        return {
+        uri,
+        maxPoolSize: 500,       // 👈 thêm vào đây
+        minPoolSize: 50,        // 👈 để tránh khởi động quá chậm
+        maxIdleTimeMS: 20000,   // 👈 tránh giữ kết nối chết
+        serverSelectionTimeoutMS: 5000, // 👈 fail nhanh khi Mongo overload
+      };
       },
       inject: [ConfigService],
     }),

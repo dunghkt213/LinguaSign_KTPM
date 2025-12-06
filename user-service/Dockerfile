@@ -1,27 +1,33 @@
-# Stage 1: Build
-FROM node:20-alpine AS builder
+########### BUILDER ###########
+FROM node:18-alpine AS builder
+
 WORKDIR /app
 
-# Copy package files
+# Cài Nest CLI (dùng để "nest build")
+RUN npm install -g @nestjs/cli
+
+# Copy & cài dependencies
 COPY package*.json ./
+RUN npm ci
 
-# Cài đặt dependencies
-RUN npm install
-
-# Copy toàn bộ mã nguồn (bao gồm tsconfig.json)
+# Copy toàn bộ source code
 COPY . .
 
-# Build TypeScript
+# Build ra thư mục dist/
 RUN npm run build
 
 
-# Stage 2: Runtime
-FROM node:20-alpine
+########### PRODUCTION ###########
+FROM node:18-alpine AS production
+
 WORKDIR /app
 
-# Copy node_modules + dist từ builder
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/package.json ./
+# Copy package để cài deps production
+COPY package*.json ./
+RUN npm ci --omit=dev
 
-CMD ["npm", "run", "start:dev"]
+# Copy thư mục dist từ builder stage
+COPY --from=builder /app/dist ./dist
+
+# Start ứng dụng
+CMD ["node", "dist/main.js"]

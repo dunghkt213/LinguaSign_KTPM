@@ -9,10 +9,21 @@ import { CacheModule } from './cache/cache.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
-    MongooseModule.forRootAsync({
-      useFactory: (cfg: ConfigService) => ({ uri: cfg.get<string>('MONGO_URI')}),
-      inject: [ConfigService],
-    }),
+    
+        MongooseModule.forRootAsync({
+          useFactory: (config: ConfigService) => {
+            const uri = config.get<string>('MONGO_URI');
+            console.log('🧩 MONGO_URI:', uri);
+            return {
+            uri,
+            maxPoolSize: 500,       // 👈 thêm vào đây
+            minPoolSize: 50,        // 👈 để tránh khởi động quá chậm
+            maxIdleTimeMS: 20000,   // 👈 tránh giữ kết nối chết
+            serverSelectionTimeoutMS: 5000, // 👈 fail nhanh khi Mongo overload
+          };
+          },
+          inject: [ConfigService],
+        }),
     MongooseModule.forFeature([{ name: Progress.name, schema: ProgressSchema }]),
     CacheModule,
   ],

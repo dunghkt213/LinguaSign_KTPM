@@ -1,69 +1,65 @@
+version: "3.9"
+
+networks:
+  micro-net:
+    driver: bridge
+
+volumes:
+  redis-data:
+  kafka-data:
+  zookeeper-data:
+
 services:
+
   zookeeper:
     image: confluentinc/cp-zookeeper:7.6.0
     container_name: zookeeper
     restart: always
+    networks:
+      - micro-net
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
     ports:
       - "2181:2181"
+    volumes:
+      - zookeeper-data:/var/lib/zookeeper/data
 
   kafka:
     image: confluentinc/cp-kafka:7.6.0
     container_name: kafka
     restart: always
+    networks:
+      - micro-net
     depends_on:
       - zookeeper
     environment:
       KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
     ports:
       - "9092:9092"
+    volumes:
+      - kafka-data:/var/lib/kafka/data
 
-  mongo:
-    image: mongo:6
-    container_name: mongo
+  redis:
+    image: redis:7-alpine
+    container_name: redis
     restart: always
+    networks:
+      - micro-net
     ports:
-      - "27017:27017"
+      - "6379:6379"
     volumes:
-      - mongo-data:/data/db
-
-  auth-service:
-    build:
-      context: ./auth-service
-      dockerfile: Dockerfile
-    container_name: auth-service
-    restart: unless-stopped
-    depends_on:
-      - kafka
-      - mongo
-    env_file:
-      - ./auth-service/.env
-
-  user-service:
-    build:
-      context: ./user-service
-      dockerfile: Dockerfile
-    container_name: user-service
-    volumes:
-      - ./user-service:/app
-      - /app/node_modules
-    command: npm run start:dev
-    depends_on:
-      - kafka
-      - mongo
-    env_file:
-      - ./user-service/.env  
+      - redis-data:/data
+    command: redis-server --appendonly yes
 
   api-gateway:
     build:
       context: ./api-gateway
-      dockerfile: Dockerfile
     container_name: api-gateway
     restart: unless-stopped
     depends_on:
@@ -72,76 +68,75 @@ services:
       - user-service
     env_file:
       - ./api-gateway/.env
+    networks:
+      - micro-net
     ports:
       - "3000:3000"
-    volumes:
-      - ./auth-service:/app   
-      - ./api-gateway:/app     # ✅ Mount code để hot reload
-      - /app/node_modules      # ✅ Tránh đè node_modules
-    command: npm run start:dev
+    command: ["node", "dist/main.js"]
+
+  auth-service:
+    build:
+      context: ./auth-service
+    container_name: auth-service
+    restart: unless-stopped
+    depends_on:
+      - kafka
+    env_file:
+      - ./auth-service/.env
+    networks:
+      - micro-net
+    command: ["node", "dist/main.js"]
+
+  user-service:
+    build:
+      context: ./user-service
+    container_name: user-service
+    restart: unless-stopped
+    depends_on:
+      - kafka
+    env_file:
+      - ./user-service/.env
+    networks:
+      - micro-net
+    command: ["node", "dist/main.js"]
 
   course-service:
     build:
       context: ./course-service
-      dockerfile: Dockerfile
     container_name: course-service
     restart: unless-stopped
     depends_on:
       - kafka
-      - mongo
     env_file:
       - ./course-service/.env
-    environment:
-      - PORT=3002           
+    networks:
+      - micro-net
     ports:
       - "3002:3002"
-    volumes:
-      - ./course-service:/app
-      - /app/node_modules
-    command: npm run start:dev
+    command: ["node", "dist/main.js"]
 
   learning-progress-service:
     build:
       context: ./learning-progress-service
-      dockerfile: Dockerfile
     container_name: learning-progress-service
     restart: unless-stopped
     depends_on:
       - kafka
-      - mongo
     env_file:
       - ./learning-progress-service/.env
-    volumes:
-      - ./learning-progress-service:/app
-      - /app/node_modules
-    command: npm run start:dev
+    networks:
+      - micro-net
+    command: ["node", "dist/main.js"]
 
   noti-service:
     build:
       context: ./noti-service
-      dockerfile: Dockerfile
     container_name: noti-service
     restart: unless-stopped
     depends_on:
       - kafka
-      - mongo
     env_file:
       - ./noti-service/.env
-    volumes:
-      - ./noti-service:/app
-      - /app/node_modules
-    command: npm run start:dev
-
-  redis:
-    image: redis:7-alpine
-    container_name: redis
-    restart: always
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis-data:/data
-    command: redis-server --appendonly yes
-
-volumes:
-  mongo-data:
-  redis-data:
+    networks:
+      - micro-net
+    command: ["node", "dist/main.js"]

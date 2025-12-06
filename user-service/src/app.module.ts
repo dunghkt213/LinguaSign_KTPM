@@ -10,22 +10,21 @@ import { CacheModule } from './cache/cache.module';
 @Module({
   imports: [
     // 1️⃣ Load biến môi trường toàn cục (.env)
-    ConfigModule.forRoot({ isGlobal: true }),
+  ConfigModule.forRoot({ isGlobal: true }),
 
-    // 2️⃣ Kết nối MongoDB trước khi đăng ký model
     MongooseModule.forRootAsync({
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: async (config: ConfigService) => {
-        const uri =
-          config.get<string>('MONGO_URI') || 'mongodb://mongo:27017/user_db';
-        console.log('🧩 Connecting to MongoDB:', uri);
+      useFactory: (config: ConfigService) => {
+        const uri = config.get<string>('MONGO_URI');
+        console.log('🧩 MONGO_URI:', uri);
         return {
-          uri,
-          serverSelectionTimeoutMS: 5000,
-          retryWrites: true,
-        };
+        uri,
+        maxPoolSize: 500,       // 👈 thêm vào đây
+        minPoolSize: 50,        // 👈 để tránh khởi động quá chậm
+        maxIdleTimeMS: 20000,   // 👈 tránh giữ kết nối chết
+        serverSelectionTimeoutMS: 5000, // 👈 fail nhanh khi Mongo overload
+      };
       },
+      inject: [ConfigService],
     }),
 
     // 3️⃣ Sau khi có connection, mới đăng ký schema

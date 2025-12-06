@@ -16,7 +16,13 @@ import { CacheModule } from './cache/cache.module';
       useFactory: (config: ConfigService) => {
         const uri = config.get<string>('MONGO_URI');
         console.log('🧩 MONGO_URI:', uri);
-        return { uri };
+        return {
+        uri,
+        maxPoolSize: 500,       // 👈 thêm vào đây
+        minPoolSize: 50,        // 👈 để tránh khởi động quá chậm
+        maxIdleTimeMS: 20000,   // 👈 tránh giữ kết nối chết
+        serverSelectionTimeoutMS: 5000, // 👈 fail nhanh khi Mongo overload
+      };
       },
       inject: [ConfigService],
     }),

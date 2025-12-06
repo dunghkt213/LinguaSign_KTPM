@@ -12,10 +12,10 @@ import { redisStore } from 'cache-manager-redis-yet';
         store: await redisStore({
           socket: {
             host: config.get('REDIS_HOST') || 'redis',
-            port: config.get('REDIS_PORT') || 6379,
+            port: Number(config.get('REDIS_PORT')) || 6379,
           },
-          ttl: 30000, // 30 giây (milliseconds) - notification cần fresh
         }),
+        ttl: 3000, // TTL đặt ở đây (milliseconds)
       }),
     }),
   ],

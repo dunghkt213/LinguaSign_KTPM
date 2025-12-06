@@ -1,22 +1,33 @@
-# -----------------------------
-# Stage 1: Base
-# -----------------------------
-FROM node:18-alpine
+########### BUILDER ###########
+FROM node:18-alpine AS builder
 
-# Tạo thư mục làm việc trong container
 WORKDIR /app
 
-# Copy package.json trước để cài dependencies
+# Cài Nest CLI (dùng để "nest build")
+RUN npm install -g @nestjs/cli
+
+# Copy & cài dependencies
 COPY package*.json ./
+RUN npm ci
 
-# Cài dependencies
-RUN npm install
-
-# Copy toàn bộ source code vào container
+# Copy toàn bộ source code
 COPY . .
 
-# Expose cổng nếu cần (Nest thường là 3000, nhưng microservice có thể không cần)
-EXPOSE 3001
+# Build ra thư mục dist/
+RUN npm run build
 
-# Lệnh chạy cho môi trường dev
-CMD ["npm", "run", "start:dev"]
+
+########### PRODUCTION ###########
+FROM node:18-alpine AS production
+
+WORKDIR /app
+
+# Copy package để cài deps production
+COPY package*.json ./
+RUN npm ci --omit=dev
+
+# Copy thư mục dist từ builder stage
+COPY --from=builder /app/dist ./dist
+
+# Start ứng dụng
+CMD ["node", "dist/main.js"]

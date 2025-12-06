@@ -1,17 +1,33 @@
-FROM node:18-alpine
+########### BUILDER ###########
+FROM node:18-alpine AS builder
 
-# Làm việc bên trong thư mục api-gateway
 WORKDIR /app
 
-# Cài Nest CLI (nếu chưa có)
+# Cài Nest CLI (dùng để "nest build")
 RUN npm install -g @nestjs/cli
 
-# Copy package files và cài dependency
+# Copy & cài dependencies
 COPY package*.json ./
-RUN npm install
+RUN npm ci
 
-# Copy toàn bộ mã nguồn vào container
+# Copy toàn bộ source code
 COPY . .
 
-# Mặc định chạy ở chế độ dev
-CMD ["npm", "run", "start:dev"]
+# Build ra thư mục dist/
+RUN npm run build
+
+
+########### PRODUCTION ###########
+FROM node:18-alpine AS production
+
+WORKDIR /app
+
+# Copy package để cài deps production
+COPY package*.json ./
+RUN npm ci --omit=dev
+
+# Copy thư mục dist từ builder stage
+COPY --from=builder /app/dist ./dist
+
+# Start ứng dụng
+CMD ["node", "dist/main.js"]
