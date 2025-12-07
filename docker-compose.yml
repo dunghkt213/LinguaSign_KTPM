@@ -47,12 +47,12 @@ services:
       - "27017:27017"
     volumes:
       - mongo-data:/data/db
-    command: mongod --wiredTigerCacheSizeGB 2.0 --maxConns 500
+    command: mongod --wiredTigerCacheSizeGB 2.0 --maxConns 1500
     deploy:
       resources:
         limits:
-          cpus: '2.0'
-          memory: 3G
+          cpus: '3.0'
+          memory: 5G
         reservations:
           cpus: '1.0'
           memory: 1.5G

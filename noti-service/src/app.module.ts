@@ -15,7 +15,11 @@ import { CacheModule } from './cache/cache.module';
     MongooseModule.forRootAsync({
       useFactory: (config: ConfigService) => {
         const uri = config.get<string>('MONGO_URI');
-        return { uri };
+        return { 
+          uri,
+          maxPoolSize: 280,
+          minPoolSize: 30,
+         };
       },
       inject: [ConfigService],
     }),
