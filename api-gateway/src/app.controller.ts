@@ -12,6 +12,7 @@ import {
   Patch,
   Query,
 } from '@nestjs/common';
+import { Throttle, SkipThrottle } from '@nestjs/throttler';
 import { AppService } from './app.service';
 import type { Response, Request } from 'express';
 import { JwtAuthGuard } from './jwt-auth.guard';
@@ -20,6 +21,8 @@ import { JwtAuthGuard } from './jwt-auth.guard';
 export class AppController {
   constructor(private readonly appService: AppService) {}
 
+  // Skip rate limiting for health check endpoint
+  @SkipThrottle()
   @Get('health')
   healthCheck() {
     return { status: 'ok', timestamp: new Date().toISOString() };
@@ -143,6 +146,8 @@ export class AppController {
   
   // -------- AUTH --------
 
+  // Stricter rate limit for registration: 5 requests per 60 seconds
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   @Post('auth/register')
   async register(
     @Body() body: any,
@@ -164,6 +169,8 @@ export class AppController {
     };
   }
 
+  // Stricter rate limit for login: 10 requests per 60 seconds
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
   @Post('auth/login')
   async login(
     @Body() body: any,
