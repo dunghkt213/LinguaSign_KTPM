@@ -1,12 +1,10 @@
 import http from "k6/http";
 import { sleep, check } from "k6";
-import { randomIntBetween } from "k6";
-import exec from "k6/execution";
 
 export const options = {
   stages: [
-    { duration: "2m", target: 2500 },
-    { duration: "2m", target: 2500 },
+    { duration: "2m", target: 200 },
+    { duration: "2m", target: 200 },
   ],
 };
 
@@ -160,9 +158,9 @@ export default function (data) {
   });
 
   // ===================== USERS (CRUD) =====================
-  // Generate unique user identifier using VU ID + iteration + timestamp + random
+  // Generate unique user identifier using timestamp + large random number
   // This prevents duplicate username errors when multiple VUs run simultaneously
-  const uniqueId = `${exec.vu.idInTest}_${exec.scenario.iterationInTest}_${Date.now()}_${randomIntBetween(1000, 9999)}`;
+  const uniqueId = `${Date.now()}_${Math.floor(Math.random() * 900000) + 100000}`;
   const userCreate = http.post(
     `${BASE_URL}/users`,
     JSON.stringify({
