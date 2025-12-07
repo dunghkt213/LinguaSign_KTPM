@@ -23,9 +23,11 @@ export class AppController {
   }
 
   @MessagePattern('course.getAll')
-  async handleGetAll() {
+  async handleGetAll(@Payload() data?: { page?: number; limit?: number }) {
     try {
-      const all = await this.appService.getAll();
+      const page = data?.page || 1;
+      const limit = data?.limit || 50;
+      const all = await this.appService.getAll(page, limit);
       return { success: true, data: all };
     } catch (err) {
       return { success: false, error: err?.message ?? String(err) };

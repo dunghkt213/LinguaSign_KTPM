@@ -102,8 +102,8 @@ export class AppService implements OnModuleInit, OnApplicationBootstrap {
       ).toPromise();
   }
 
-  async getAllUsers() {
-    return this.kafkaClient.send('user.getAll', {})
+  async getAllUsers(page: number = 1, limit: number = 50) {
+    return this.kafkaClient.send('user.getAll', { page, limit })
       .pipe(
         timeout(30000),
         catchError(err => throwError(() => new RequestTimeoutException('User service timeout')))
@@ -143,8 +143,8 @@ export class AppService implements OnModuleInit, OnApplicationBootstrap {
       ).toPromise();
   }
 
-  async getAllCourses() {
-   return this.kafkaClient.send('course.getAll', {})
+  async getAllCourses(page: number = 1, limit: number = 50) {
+   return this.kafkaClient.send('course.getAll', { page, limit })
      .pipe(
        timeout(30000),
        catchError(err => throwError(() => new RequestTimeoutException('Course service timeout')))

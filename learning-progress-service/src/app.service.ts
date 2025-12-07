@@ -47,8 +47,36 @@ export class AppService {
     return saved;
   }
 
-  async getAll(): Promise<Progress[]> {
-    return this.progressModel.find().exec();
+  async getAll(page: number = 1, limit: number = 50): Promise<{ progress: Progress[], total: number, page: number, totalPages: number }> {
+    const cacheKey = `progress:all:${page}:${limit}`;
+    
+    // Check cache
+    const cached = await this.cacheManager.get<{ progress: Progress[], total: number, page: number, totalPages: number }>(cacheKey);
+    if (cached) {
+      console.log('✅ Cache HIT:', cacheKey);
+      return cached;
+    }
+    
+    // Cache MISS - query DB
+    console.log('❌ Cache MISS:', cacheKey);
+    const skip = (page - 1) * limit;
+    
+    const [progress, total] = await Promise.all([
+      this.progressModel.find().skip(skip).limit(limit).exec(),
+      this.progressModel.countDocuments().exec()
+    ]);
+    
+    const result = {
+      progress,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit)
+    };
+    
+    // Save to cache (30 minutes)
+    await this.cacheManager.set(cacheKey, result, 1800000);
+    
+    return result;
   }
 
   async getById(id: string): Promise<Progress> {
@@ -80,24 +108,36 @@ export class AppService {
     return progress;
   }
 
-  async getAllByUser(userId: string): Promise<Progress[]> {
-    const cacheKey = `progress:user:${userId}`;
+  async getAllByUser(userId: string, page: number = 1, limit: number = 50): Promise<{ progress: Progress[], total: number, page: number, totalPages: number }> {
+    const cacheKey = `progress:user:${userId}:${page}:${limit}`;
     
-    // 1. Check cache
-    const cached = await this.cacheManager.get<Progress[]>(cacheKey);
+    // Check cache
+    const cached = await this.cacheManager.get<{ progress: Progress[], total: number, page: number, totalPages: number }>(cacheKey);
     if (cached) {
       console.log('✅ Cache HIT:', cacheKey);
       return cached;
     }
     
-    // 2. Cache MISS - query DB
+    // Cache MISS - query DB
     console.log('❌ Cache MISS:', cacheKey);
-    const progress = await this.progressModel.find({ userId }).exec();
+    const skip = (page - 1) * limit;
     
-    // 3. Save to cache
-    await this.cacheManager.set(cacheKey, progress, 300000);
+    const [progress, total] = await Promise.all([
+      this.progressModel.find({ userId }).skip(skip).limit(limit).exec(),
+      this.progressModel.countDocuments({ userId }).exec()
+    ]);
     
-    return progress;
+    const result = {
+      progress,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit)
+    };
+    
+    // Save to cache (5 minutes)
+    await this.cacheManager.set(cacheKey, result, 300000);
+    
+    return result;
   }
 
   async update(id: string, dto: UpdateProgressDto): Promise<Progress> {

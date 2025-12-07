@@ -40,8 +40,10 @@ export class AppController {
   }
 
   @MessagePattern('user.getAll')
-  async getAllUsers() {
-    return await this.appService.getAll();
+  async getAllUsers(@Payload() data?: { page?: number; limit?: number }) {
+    const page = data?.page || 1;
+    const limit = data?.limit || 50;
+    return await this.appService.getAll(page, limit);
   }
 } 
  

@@ -114,8 +114,8 @@ export class AppController {
   }
   // ----- Course endpoints -----
   @Get('courses')
-  async httpGetAllCourses() {
-    return await this.appService.getAllCourses();
+  async httpGetAllCourses(@Query('page') page?: string, @Query('limit') limit?: string) {
+    return await this.appService.getAllCourses(page ? parseInt(page) : 1, limit ? parseInt(limit) : 50);
   }
 
   @Get('courses/:id')
@@ -229,8 +229,8 @@ export class AppController {
   // login, register, refresh thì không dùng guard
   @UseGuards(JwtAuthGuard)
   @Get('users')
-  async getAllUsers() {
-    return await this.appService.getAllUsers();
+  async getAllUsers(@Query('page') page?: string, @Query('limit') limit?: string) {
+    return await this.appService.getAllUsers(page ? parseInt(page) : 1, limit ? parseInt(limit) : 50);
   }
 
   @UseGuards(JwtAuthGuard)

@@ -22,19 +22,27 @@ export class AppController {
   }
 
   // Query by userId & courseId or list by userId
-  // /progress?userId=...&courseId=...
+  // /progress?userId=...&courseId=...&page=...&limit=...
   @Get()
-  async query(@Query('userId') userId?: string, @Query('courseId') courseId?: string) {
+  async query(
+    @Query('userId') userId?: string,
+    @Query('courseId') courseId?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string
+  ) {
+    const pageNum = page ? parseInt(page) : 1;
+    const limitNum = limit ? parseInt(limit) : 50;
+    
     if (userId && courseId) {
       const item = await this.appService.getByUserAndCourse(userId, courseId);
       return { success: true, data: item };
     }
     if (userId) {
-      const list = await this.appService.getAllByUser(userId);
+      const list = await this.appService.getAllByUser(userId, pageNum, limitNum);
       return { success: true, data: list };
     }
-    // no query params -> return ALL progress entries
-    const all = await this.appService.getAll();
+    // no query params -> return ALL progress entries (paginated)
+    const all = await this.appService.getAll(pageNum, limitNum);
     return { success: true, data: all };
   }
 
@@ -63,10 +71,13 @@ export class AppController {
   }
 
   @MessagePattern('progress.get')
-  async handleGet(@Payload() data: { id?: string; userId?: string; courseId?: string }) {
+  async handleGet(@Payload() data: { id?: string; userId?: string; courseId?: string; page?: number; limit?: number }) {
     try {
+      const page = data?.page || 1;
+      const limit = data?.limit || 50;
+      
       if (!data || (typeof data === 'object' && Object.keys(data).length === 0)) {
-        const all = await this.appService.getAll();
+        const all = await this.appService.getAll(page, limit);
         return { success: true, data: all };
       }
       if (data.id) {
@@ -78,7 +89,7 @@ export class AppController {
         return { success: true, data: item };
       }
       if (data.userId) {
-        const list = await this.appService.getAllByUser(data.userId);
+        const list = await this.appService.getAllByUser(data.userId, page, limit);
         return { success: true, data: list };
       }
       return { success: false, error: 'Invalid query' };
