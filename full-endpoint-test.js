@@ -3,10 +3,8 @@ import { sleep, check, randomIntBetween } from "k6";
 
 export const options = {
   stages: [
-    { duration: "30s", target: 20 },   
-    { duration: "1m",  target: 50 },   
-    { duration: "30s", target: 100 },  
-    { duration: "30s", target: 0 },    
+    { duration: "2m", target: 600 },
+    { duration: "2m", target: 600 },
   ],
 };
 

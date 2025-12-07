@@ -21,17 +21,48 @@ services:
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+      KAFKA_NUM_PARTITIONS: 3
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 1
+      KAFKA_MIN_INSYNC_REPLICAS: 1
+      KAFKA_LOG_RETENTION_HOURS: 24
+      KAFKA_LOG_SEGMENT_BYTES: 1073741824
+      KAFKA_COMPRESSION_TYPE: 'gzip'
     ports:
       - "9092:9092"
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
 
-  mongo:
-    image: mongo:6
-    container_name: mongo
-    restart: always
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongo-data:/data/db
+  # MongoDB local - using host machine MongoDB instead of Docker
+  # mongo:
+  #   image: mongo:6
+  #   container_name: mongo
+  #   restart: always
+  #   ports:
+  #     - "27017:27017"
+  #   volumes:
+  #     - mongo-data:/data/db
+  #   command: mongod --wiredTigerCacheSizeGB 0.5 --maxConns 200
+  #   deploy:
+  #     resources:
+  #       limits:
+  #         cpus: '1.0'
+  #         memory: 1G
+  #       reservations:
+  #         cpus: '0.5'
+  #         memory: 512M
+  #   healthcheck:
+  #     test: [ "CMD", "mongosh", "--eval", "db.adminCommand('ping')" ]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 3
+  #     start_period: 40s
 
   auth-service:
     build:
@@ -40,10 +71,20 @@ services:
     container_name: auth-service
     restart: unless-stopped
     depends_on:
-      - kafka
-      - mongo
+      kafka:
+        condition: service_started
+      redis:
+        condition: service_started
     env_file:
       - ./auth-service/.env
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
 
   user-service:
     build:
@@ -53,12 +94,22 @@ services:
     volumes:
       - ./user-service:/app
       - /app/node_modules
-    command: npm run start:dev
+    command: npm run start:prod
     depends_on:
-      - kafka
-      - mongo
+      kafka:
+        condition: service_started
+      redis:
+        condition: service_started
     env_file:
-      - ./user-service/.env  
+      - ./user-service/.env
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
 
   api-gateway:
     build:
@@ -67,18 +118,29 @@ services:
     container_name: api-gateway
     restart: unless-stopped
     depends_on:
-      - kafka
-      - auth-service
-      - user-service
+      kafka:
+        condition: service_started
+      redis:
+        condition: service_started
     env_file:
       - ./api-gateway/.env
     ports:
       - "3000:3000"
-    volumes:
-      - ./auth-service:/app   
-      - ./api-gateway:/app     # ✅ Mount code để hot reload
-      - /app/node_modules      # ✅ Tránh đè node_modules
-    command: npm run start:dev
+    command: npm run start:prod
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+    healthcheck:
+      test: [ "CMD", "wget", "--spider", "-q", "http://localhost:3000/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   course-service:
     build:
@@ -87,18 +149,31 @@ services:
     container_name: course-service
     restart: unless-stopped
     depends_on:
-      - kafka
-      - mongo
+      kafka:
+        condition: service_started
+      redis:
+        condition: service_started
     env_file:
       - ./course-service/.env
     environment:
-      - PORT=3002           
+      - PORT=3002
     ports:
       - "3002:3002"
-    volumes:
-      - ./course-service:/app
-      - /app/node_modules
-    command: npm run start:dev
+    command: npm run start:prod
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    healthcheck:
+      test: [ "CMD", "wget", "--spider", "-q", "http://localhost:3002/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   learning-progress-service:
     build:
@@ -107,14 +182,24 @@ services:
     container_name: learning-progress-service
     restart: unless-stopped
     depends_on:
-      - kafka
-      - mongo
+      kafka:
+        condition: service_started
+      redis:
+        condition: service_started
     env_file:
       - ./learning-progress-service/.env
     volumes:
       - ./learning-progress-service:/app
       - /app/node_modules
-    command: npm run start:dev
+    command: npm run start:prod
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
 
   noti-service:
     build:
@@ -123,14 +208,24 @@ services:
     container_name: noti-service
     restart: unless-stopped
     depends_on:
-      - kafka
-      - mongo
+      kafka:
+        condition: service_started
+      redis:
+        condition: service_started
     env_file:
       - ./noti-service/.env
     volumes:
       - ./noti-service:/app
       - /app/node_modules
-    command: npm run start:dev
+    command: npm run start:prod
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
 
   redis:
     image: redis:7-alpine
@@ -140,7 +235,20 @@ services:
       - "6379:6379"
     volumes:
       - redis-data:/data
-    command: redis-server --appendonly yes
+    command: redis-server --appendonly yes --save 60 1000 --maxmemory 256mb --maxmemory-policy allkeys-lru
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 3s
+      retries: 3
 
 volumes:
   mongo-data:
