@@ -1,10 +1,11 @@
 import { Module } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { CacheModule } from './cache/cache.module';
+import { ResponseThrottlingInterceptor } from './response-throttling.interceptor';
 
 @Module({
   imports: [
@@ -42,6 +43,11 @@ import { CacheModule } from './cache/cache.module';
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
+    },
+    // Apply response throttling globally
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: ResponseThrottlingInterceptor,
     },
   ],
 })
