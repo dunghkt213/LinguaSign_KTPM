@@ -39,30 +39,29 @@ services:
           cpus: '0.5'
           memory: 512M
 
-  # MongoDB local - using host machine MongoDB instead of Docker
-  # mongo:
-  #   image: mongo:6
-  #   container_name: mongo
-  #   restart: always
-  #   ports:
-  #     - "27017:27017"
-  #   volumes:
-  #     - mongo-data:/data/db
-  #   command: mongod --wiredTigerCacheSizeGB 0.5 --maxConns 200
-  #   deploy:
-  #     resources:
-  #       limits:
-  #         cpus: '1.0'
-  #         memory: 1G
-  #       reservations:
-  #         cpus: '0.5'
-  #         memory: 512M
-  #   healthcheck:
-  #     test: [ "CMD", "mongosh", "--eval", "db.adminCommand('ping')" ]
-  #     interval: 10s
-  #     timeout: 5s
-  #     retries: 3
-  #     start_period: 40s
+  mongo:
+    image: mongo:6
+    container_name: mongo
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    command: mongod --wiredTigerCacheSizeGB 2.0 --maxConns 1500
+    deploy:
+      resources:
+        limits:
+          cpus: '3.0'
+          memory: 5G
+        reservations:
+          cpus: '1.0'
+          memory: 1.5G
+    healthcheck:
+      test: [ "CMD", "mongosh", "--eval", "db.adminCommand('ping')" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
 
   auth-service:
     build:

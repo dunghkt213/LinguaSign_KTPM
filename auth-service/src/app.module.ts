@@ -16,7 +16,11 @@ import { CacheModule } from './cache/cache.module';
       useFactory: (config: ConfigService) => {
         const uri = config.get<string>('MONGO_URI');
         console.log('🧩 MONGO_URI:', uri);
-        return { uri };
+        return { 
+          uri,
+          maxPoolSize: 300,
+          minPoolSize: 30, 
+        };
       },
       inject: [ConfigService],
     }),

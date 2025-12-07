@@ -10,7 +10,11 @@ import { CacheModule } from './cache/cache.module';
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     MongooseModule.forRootAsync({
-      useFactory: (cfg: ConfigService) => ({ uri: cfg.get<string>('MONGO_URI')}),
+      useFactory: (cfg: ConfigService) => ({ 
+        uri: cfg.get<string>('MONGO_URI'),
+        maxPoolSize: 300, 
+        minPoolSize: 30,
+      }),
       inject: [ConfigService],
     }),
     MongooseModule.forFeature([{ name: Progress.name, schema: ProgressSchema }]),

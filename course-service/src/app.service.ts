@@ -24,24 +24,36 @@ export class AppService {
     return saved;
   }
 
-  async getAll(): Promise<Course[]> {
-    const cacheKey = 'courses:all';
+  async getAll(page: number = 1, limit: number = 50): Promise<{ courses: Course[], total: number, page: number, totalPages: number }> {
+    const cacheKey = `courses:page:${page}:limit:${limit}`;
     
     // 1. Check cache
-    const cached = await this.cacheManager.get<Course[]>(cacheKey);
+    const cached = await this.cacheManager.get<any>(cacheKey);
     if (cached) {
       console.log('✅ Cache HIT:', cacheKey);
       return cached;
     }
     
-    // 2. Cache MISS - query DB
+    // 2. Cache MISS - query DB with pagination
     console.log('❌ Cache MISS:', cacheKey);
-    const courses = await this.courseModel.find().exec();
+    const skip = (page - 1) * limit;
+    
+    const [courses, total] = await Promise.all([
+      this.courseModel.find().skip(skip).limit(limit).exec(),
+      this.courseModel.countDocuments().exec(),
+    ]);
+    
+    const result = {
+      courses,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit),
+    };
     
     // 3. Save to cache (30 phút)
-    await this.cacheManager.set(cacheKey, courses, 1800000);
+    await this.cacheManager.set(cacheKey, result, 1800000);
     
-    return courses;
+    return result;
   }
 
   async getById(id: string): Promise<Course> {

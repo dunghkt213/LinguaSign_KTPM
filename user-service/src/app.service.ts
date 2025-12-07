@@ -107,7 +107,35 @@ export class AppService {
     return result !== null;
   }
 
-  async getAll(): Promise<User[]> {
-    return this.userModel.find().exec();
+  async getAll(page: number = 1, limit: number = 50): Promise<{ users: User[], total: number, page: number, totalPages: number }> {
+    const cacheKey = `users:all:${page}:${limit}`;
+    
+    // Check cache
+    const cached = await this.cacheManager.get<{ users: User[], total: number, page: number, totalPages: number }>(cacheKey);
+    if (cached) {
+      console.log('✅ Cache HIT:', cacheKey);
+      return cached;
+    }
+    
+    // Cache MISS - query DB
+    console.log('❌ Cache MISS:', cacheKey);
+    const skip = (page - 1) * limit;
+    
+    const [users, total] = await Promise.all([
+      this.userModel.find().select('-password').skip(skip).limit(limit).exec(),
+      this.userModel.countDocuments().exec()
+    ]);
+    
+    const result = {
+      users,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit)
+    };
+    
+    // Save to cache (30 minutes)
+    await this.cacheManager.set(cacheKey, result, 1800000);
+    
+    return result;
   }
 }
