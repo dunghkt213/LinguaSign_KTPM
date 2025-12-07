@@ -22,7 +22,7 @@ import { CacheModule } from './cache/cache.module';
         console.log('🧩 Connecting to MongoDB:', uri);
         return {
           uri,
-          maxPoolSize: 280,
+          maxPoolSize: 300,
           minPoolSize: 30,
           serverSelectionTimeoutMS: 5000,
           retryWrites: true,

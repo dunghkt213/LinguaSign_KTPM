@@ -12,7 +12,7 @@ import { CacheModule } from './cache/cache.module';
     MongooseModule.forRootAsync({
       useFactory: (cfg: ConfigService) => ({ 
         uri: cfg.get<string>('MONGO_URI'),
-        maxPoolSize: 280, 
+        maxPoolSize: 300, 
         minPoolSize: 30,
       }),
       inject: [ConfigService],

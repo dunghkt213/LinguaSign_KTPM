@@ -18,7 +18,7 @@ import { CacheModule } from './cache/cache.module';
         console.log('🧩 MONGO_URI:', uri);
         return { 
           uri,
-          maxPoolSize: 280,
+          maxPoolSize: 300,
           minPoolSize: 30, 
         };
       },
